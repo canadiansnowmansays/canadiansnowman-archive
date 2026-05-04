@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search | Canadian Snowman Says</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div class="header-inner"><a class="site-name" href="../">Canadian Snowman Says</a><nav class="main-nav"><a href="../sections/">By Section</a><a href="../chronological/">Chronological</a><a href="../search/" class="active">Search</a></nav></div></header>
+<main class="page-wrap">
+<div class="breadcrumb"><a href="../">Home</a><sep>/</sep>Search</div>
+<div class="page-header"><h1>Search</h1><p>Search across all 942 posts by title, subtitle, and series.</p></div>
+<div class="search-wrap">
+<input id="q" class="search-input" type="search" placeholder="Search posts&hellip;" autocomplete="off" autofocus>
+<p id="hint" class="search-hint">Loading search index&hellip;</p>
+<div id="results"></div>
+</div>
+</main>
+<footer class="site-footer"><p>Canadian Snowman Says &mdash; An archive of essays and dispatches</p></footer>
+<script src="https://unpkg.com/lunr@2.3.9/lunr.js"></script>
+<script>
+(function(){
+  var input   = document.getElementById('q');
+  var results = document.getElementById('results');
+  var hint    = document.getElementById('hint');
+  var posts   = [];
+  var idx     = null;
+
+  fetch('../assets/search-index.json')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      posts = data;
+      idx = lunr(function(){
+        this.ref('id');
+        this.field('title',    {boost:4});
+        this.field('subtitle', {boost:2});
+        this.field('series',   {boost:1});
+        var self = this;
+        data.forEach(function(p){ self.add(p); });
+      });
+      hint.textContent = 'Index loaded â€” ' + data.length + ' posts';
+    })
+    .catch(function(){ hint.textContent = 'Could not load search index.'; });
+
+  function esc(s){
+    return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+  }
+
+  function doSearch(){
+    var q = input.value.trim();
+    results.innerHTML = '';
+    if(!idx || q.length < 2){ return; }
+    try {
+      var hits = idx.search(q + '~1');
+      if(!hits.length){
+        results.innerHTML = '<p class="search-empty">No results for â€œ' + esc(q) + 'â€. Try fewer or different words.</p>';
+        return;
+      }
+      var html = '';
+      hits.slice(0,40).forEach(function(h){
+        var p = null;
+        for(var i=0;i<posts.length;i++){ if(posts[i].id===h.ref){ p=posts[i]; break; } }
+        if(!p) return;
+        html += '<div class="search-result">';
+        html += '<div class="post-card-meta">';
+        html += '<a class="series-badge" href="../sections/' + esc(p.seriesSlug) + '/">' + esc(p.series) + '</a>';
+        html += '<span class="post-card-date">' + esc(p.date) + '</span>';
+        html += '</div>';
+        html += '<h2 class="post-card-title"><a href="../posts/' + esc(p.id) + '/">' + esc(p.title) + '</a></h2>';
+        if(p.subtitle) html += '<p class="post-card-subtitle">' + esc(p.subtitle) + '</p>';
+        html += '</div>';
+      });
+      results.innerHTML = html;
+    } catch(e){
+      results.innerHTML = '<p class="search-empty">Search error â€” try different terms.</p>';
+    }
+  }
+
+  input.addEventListener('input', doSearch);
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); doSearch(); } });
+
+  // Run search if ?q= param present
+  var params = new URLSearchParams(window.location.search);
+  if(params.get('q')){ input.value = params.get('q'); doSearch(); }
+})();
+</script>
+</body>
+</html>
