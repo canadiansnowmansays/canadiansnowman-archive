@@ -1,0 +1,442 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Recovery Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: summary strip -> filter rail -> ledger of initiative cards, each stamped with its lever and MAHA alignment */
+  --bg:#f3f5f8;
+  --surface:#ffffff;
+  --ink:#16202e;
+  --muted:#5a6676;
+  --line:#d9dee6;
+  --accent:#1d4e89;
+  --accent-soft:#e3ecf7;
+  --good:#1f7a4d; --good-soft:#e2f3ea;
+  --warn:#a3620a; --warn-soft:#fbf0dc;
+  --bad:#a8322d;  --bad-soft:#f8e3e1;
+  --display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --body:"Public Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f141b; --surface:#171e28; --ink:#e6ebf2; --muted:#9aa6b6; --line:#2a3443;
+    --accent:#7fb0ec; --accent-soft:#1c2c42;
+    --good:#5fc795; --good-soft:#15291f; --warn:#e2ad5a; --warn-soft:#2c2213; --bad:#ef8a83; --bad-soft:#2f1a19;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f141b; --surface:#171e28; --ink:#e6ebf2; --muted:#9aa6b6; --line:#2a3443;
+  --accent:#7fb0ec; --accent-soft:#1c2c42;
+  --good:#5fc795; --good-soft:#15291f; --warn:#e2ad5a; --warn-soft:#2c2213; --bad:#ef8a83; --bad-soft:#2f1a19;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 60px}
+header h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,5vw,42px);line-height:1.1;margin:0 0 6px;text-wrap:balance}
+.dek{color:var(--muted);max-width:68ch;margin:0 0 18px;font-size:16px}
+.live{display:inline-flex;align-items:center;gap:6px;background:var(--bad-soft);color:var(--bad);font-weight:700;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-right:8px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block}
+.updated{font-size:13px;color:var(--muted);margin:0 0 4px}
+.log{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 22px;max-width:80ch}
+.log h2{font-family:var(--display);font-size:19px;margin:0 0 6px}
+.log ul{margin:0;padding-left:18px}
+.log li{margin-bottom:4px}
+.log time{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.st{font-size:12px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.st.moving{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.st.done{background:var(--good-soft);color:var(--good);border-color:transparent}
+.st.blocked{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px}
+.context{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0 22px}
+.ctx{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.ctx b{display:block;font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
+.ctx span{color:var(--muted);font-size:13px}
+.math{background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:8px;padding:14px 16px;margin:0 0 22px;max-width:80ch}
+.math h2{font-family:var(--display);font-size:19px;margin:0 0 6px}
+.math p{margin:0 0 6px}
+.math ul{margin:6px 0 0;padding-left:18px}
+.controls{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 12px;border-bottom:1px solid var(--line);margin-bottom:16px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.row .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;min-width:70px;font-weight:600}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.chip:focus-visible,.status:focus-visible,#q:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#q{font:inherit;font-size:14px;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:220px;flex:1;max-width:360px}
+.tally{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+.tally strong{color:var(--ink);font-variant-numeric:tabular-nums}
+.pillar{margin:26px 0 10px;font-family:var(--display);font-size:22px;display:flex;align-items:baseline;gap:10px}
+.pillar small{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px;border-top:4px solid var(--line)}
+.card.k-reverse{border-top-color:var(--bad)}
+.card.k-repair{border-top-color:var(--warn)}
+.card.k-keep{border-top-color:var(--good)}
+.card.k-build{border-top-color:var(--accent)}
+.card h3{margin:0;font-size:16px;line-height:1.3;text-wrap:balance}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.tag.reverse{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.tag.repair{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.keep{background:var(--good-soft);color:var(--good);border-color:transparent}
+.tag.build{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.shared{background:var(--good-soft);color:var(--good);border-color:transparent}
+.tag.split{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.opposed{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.sec{font-size:14px}
+.sec em{font-style:normal;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:1px}
+.sec p{margin:0}
+details{font-size:13.5px;color:var(--muted)}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+details p{margin:6px 0 0}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:6px;border-top:1px dashed var(--line)}
+.prio{font-size:12px;color:var(--muted)}
+.prio b{color:var(--ink)}
+.status{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.empty{color:var(--muted);padding:30px 0;text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.sources{margin-top:40px;font-size:13px;color:var(--muted);max-width:90ch}
+.sources h2{font-family:var(--display);color:var(--ink);font-size:19px}
+.sources ol{padding-left:20px}
+.sources li{margin-bottom:4px}
+@media (max-width:420px){.grid{grid-template-columns:1fr}.row .lbl{min-width:100%}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="kicker"><span class="live"><i aria-hidden="true"></i>Live ledger</span>The RFK Files · Companion ledger</div>
+  <h1>The Recovery Ledger</h1>
+  <p class="updated">Edition 1 · Last updated <time datetime="2026-11-24">24 November 2026</time> · Updated as Congress, the courts and HHS act</p>
+  <p class="dek">A working agenda for the Democratic Congress that takes office in January 2027, and for anyone who came to Make America Healthy Again for cleaner food and fewer chemicals. Each entry names what Kennedy did, what should replace it, which lever can actually move it, and whether MAHA voters are likely to be allies.</p>
+</header>
+
+<section class="context" aria-label="Where things stand">
+  <div class="ctx"><b>54 · 251+</b><span>Democratic seats in the Senate and House after the 3 Nov 2026 midterms (some races still uncalled)</span></div>
+  <div class="ctx"><b>67 · 290</b><span>Votes needed to override a veto in the Senate and House. Trump has said he will veto Democratic bills</span></div>
+  <div class="ctx"><b>5,838</b><span>Confirmed U.S. measles cases in 2026 (CDC, 19 Nov). States report 10 deaths; the CDC lists six. PAHO formally withdrew U.S. measles elimination status on 17 Nov 2026</span></div>
+  <div class="ctx"><b>2 flagships lost</b><span>MAHA's flagship candidates, Ken Paxton (Texas Senate) and Zach Lahn (Iowa governor), both lost on 3 Nov 2026</span></div>
+</section>
+
+<section class="log" aria-label="Update log">
+  <h2>Update log</h2>
+  <p style="margin:0 0 6px;color:var(--muted)">This ledger is a living document. Entries are added, revised and re-statused as bills are introduced, riders are attached, courts rule and HHS acts. The newest change is listed first.</p>
+  <ul>
+    <li><time datetime="2026-11-24">24 Nov 2026</time> · Measles tile and entry updated: 5,838 CDC-confirmed cases as of 19 November, and PAHO's formal 17 November announcement that the U.S. has lost measles elimination status, with a corrective action plan now required. Measles entry notes the CDC's roughly $100 million in added state and local funding since August and Kennedy's pledge to regain the status. Oversight entry notes the Wyden–Alsobrooks inquiry, opened 11 November, into about $250,000 in travel and lodging Kennedy received from donor Gavin de Becker.</li>
+    <li><time datetime="2026-11-17">17 Nov 2026</time> · House seat tile updated to 251+. Medicaid entry notes the 29 October court ruling striking CMS's stricter medical-frailty test. Edition 1 entry count corrected to 24. MAHA tile now shows the defeat of the movement's two flagship candidates.</li>
+    <li><time datetime="2026-11-17">17 Nov 2026</time> · Measles tile and entry updated: 5,412 CDC-confirmed cases, 10 state-reported deaths against six on the CDC tally, and reports that PAHO's review commission found the U.S. no longer meets measles elimination criteria. Medicaid entry updated for CMS's optional enforcement delay to 30 June 2027. Oversight entry notes the Wyden–Alsobrooks inquiry into Kennedy's Samoa testimony. GRAS and ultra-processed food entries brought up to date with the August 2026 proposals.</li>
+    <li><time datetime="2026-11-11">11 Nov 2026</time> · Measles entry updated: eight state-confirmed deaths and the Johns Hopkins cost estimate of nearly $83 million (CNBC).</li>
+    <li><time datetime="2026-11-11">11 Nov 2026</time> · Added a Priority filter; cards now sort by priority within each topic.</li>
+    <li><time datetime="2026-11-11">11 Nov 2026</time> · Edition 1 published: 24 initiatives across six pillars. All statuses at Not started; the 120th Congress convenes in January 2027.</li>
+  </ul>
+</section>
+
+<section class="math">
+  <h2>How to read the levers</h2>
+  <p>A Democratic Congress can pass almost anything and enact very little on its own. Standalone bills meet a veto unless they win Republican votes. That makes five levers matter, roughly in this order:</p>
+  <ul>
+    <li><b>Appropriations</b>: funding levels and binding riders in the Labor-HHS bill, which the president has to sign to keep government open.</li>
+    <li><b>Oversight</b>: hearings, subpoenas, Inspector General and GAO referrals. Needs no signature.</li>
+    <li><b>Bipartisan bill</b>: where MAHA Republicans and Democrats already agree, a veto-proof margin is conceivable.</li>
+    <li><b>Courts</b>: suits already running, such as <i>AAP v. Kennedy</i>, which has frozen the January 2026 schedule.</li>
+    <li><b>States</b>: governors and legislatures acting where Washington will not.</li>
+  </ul>
+</section>
+
+<div class="controls" role="region" aria-label="Filters">
+  <div class="row"><span class="lbl">Priority</span><div id="f-prio" class="row"></div></div>
+  <div class="row"><span class="lbl">Action</span><div id="f-kind" class="row"></div></div>
+  <div class="row"><span class="lbl">MAHA</span><div id="f-maha" class="row"></div></div>
+  <div class="row"><span class="lbl">Lever</span><div id="f-lever" class="row"></div></div>
+  <div class="row"><label class="lbl" for="q">Search</label><input id="q" type="search" placeholder="measles, peptides, glyphosate…"></div>
+  <div class="tally" id="tally" aria-live="polite"></div>
+</div>
+
+<div class="legend" aria-hidden="true">
+  <span><i style="background:var(--bad)"></i>Reverse a Kennedy decision</span>
+  <span><i style="background:var(--warn)"></i>Repair or rebuild</span>
+  <span><i style="background:var(--good)"></i>Keep and strengthen</span>
+  <span><i style="background:var(--accent)"></i>Build something new</span>
+</div>
+
+<main id="ledger"></main>
+
+<section class="sources">
+  <h2>Sources</h2>
+  <ol>
+    <li>Associated Press / NPR / NBC News, "Democrats win full control of Congress, ushering in a new era of divided government", 3–4 Nov 2026.</li>
+    <li>The Independent (via Yahoo News), "RFK Jr will see his 'head on a platter' as Democrats target him when they take control of Congress", 6 Nov 2026.</li>
+    <li>STAT, report on MAHA's midterm losses and Democrats' outreach (Ocasio-Cortez, Booker, El-Sayed, Andrews), 5 Nov 2026.</li>
+    <li>The Hill, "Dem senator presses call for Kennedy to 'resign or be fired' after election", 5 Nov 2026.</li>
+    <li>NBC News live blog, "House shelves Hegseth impeachment resolution" (Garcia on Kennedy), 10–11 Nov 2026.</li>
+    <li>Inside Health Policy, "Dem Congressional Oversight To Shape RFK Jr.'s Future At HHS", Nov 2026.</li>
+    <li>ABC News, "Upcoming meeting could determine if US loses its measles elimination status", 10 Nov 2026.</li>
+    <li>CNBC, "Measles is surging in the U.S. — and outbreaks can cost millions", 11 Nov 2026.</li>
+    <li>Nation of Change, "US measles cases reach 5,182 as PAHO weighs elimination status", 10 Nov 2026.</li>
+    <li>Associated Press, "RFK Jr. eases access to unproven peptides despite opposition from FDA scientists", 28 Oct 2026.</li>
+    <li>Pharmaceutical Technology, "RFK Jr backs compounding of six unapproved peptides in new policy", 29 Oct 2026.</li>
+    <li>Reuters / CNN, "US Health Secretary Kennedy launches new push on vaccine injuries" and "RFK Jr. tasks researchers with studying vaccine injuries", 8 Oct 2026.</li>
+    <li>CIDRAP, "The State of US Vaccine Policy: Special Edition", 17 Mar 2026 (Judge Murphy's stay in AAP v. Kennedy).</li>
+    <li>CRS, "The 2026 Childhood Immunization Schedule" (R48982), 11 Jun 2026.</li>
+    <li>Reuters, "MAHA activists warn Trump could lose their support over glyphosate order", 20 Feb 2026.</li>
+    <li>Straight Arrow News, "MAHA moms are mad, lawmakers are fighting it: Diving into Trump's glyphosate order", Feb 2026 (Massie's No Immunity for Glyphosate Act).</li>
+    <li>Axios, "Democrats eye appeals to MAHA voters", 28 Oct 2026 (CAP polling).</li>
+    <li>Newsweek opinion, "The path to 2028 for Democrats lies in the MAHA movement", 2026 (KFF trust figures).</li>
+    <li>FoodNavigator-USA, "RFK Jr targets food dyes, SNAP and UPFs in MAHA rally keynote", 3 Mar 2026.</li>
+    <li>KFF Health News, "RFK Jr.'s MAHA movement has picked up steam in statehouses", Jan 2026 (18 states blocking SNAP soda/candy).</li>
+    <li>Washington Examiner, "Takeaways from two hearings: RFK Jr. on vaccines, Iran war, NIH funding", 21 Apr 2026 (Congress raised NIH by $415M).</li>
+    <li>WTOP / AP, "Vaccines, budget cuts and affordability: Takeaways from RFK Jr.'s gauntlet of congressional hearings", Apr 2026 (Medicaid cuts).</li>
+    <li>Advisory Board, "Health policy roundup: RFK Jr.'s new vaccine injury initiative", 14 Oct 2026 (governors on work requirements).</li>
+    <li>Contagion Live, "Measles Update: November 13, 2026", 13 Nov 2026 (CDC count of 5,412 cases).</li>
+    <li>Reuters (via Honolulu Star-Advertiser), "CDC confirms 6 measles-related deaths in 2026", 12 Nov 2026.</li>
+    <li>Contagion Live, "Reports Say US Loses Measles Elimination Status After 26 Years", 14 Nov 2026 (WSJ/Reuters reporting; 10 state-reported deaths).</li>
+    <li>Forbes, "The U.S. Has Lost Its Measles-Free Status. Getting It Back Will Take Years", 15 Nov 2026 (KFF Health News reporting on the PAHO commission).</li>
+    <li>CMS, "Optional Hold Harmless Period for Community Engagement Implementation" (SMD# 26-006), 13 Nov 2026.</li>
+    <li>KFF, "CMS Announces Optional 6-Month Delay for Enforcing Medicaid Work Requirements", 14 Nov 2026.</li>
+    <li>Associated Press (via WCAX), "Senators probing RFK Jr.'s testimony on Samoa trip after AP and Guardian showed documents refute it", 12 Nov 2026.</li>
+    <li>International Business Times UK, "RFK Jr. Investigated Over Claim Samoa Trip Had 'Nothing to Do With Vaccines' After Letter Mentions Them Eight Times", 13 Nov 2026.</li>
+    <li>Associated Press (via WCAX), "Trump officials propose new requirements for food additives and ingredients", 10 Aug 2026.</li>
+    <li>Feedstuffs, "HHS submits proposed ultra-processed food definition", 10 Aug 2026.</li>
+    <li>STAT, "Nutrition experts press White House to release ultra-processed food definition", 22 Oct 2026.</li>
+    <li>Associated Press (via KPRC), "Judge blocks Trump administration's Medicaid rule forcing sick recipients to prove frailty", 29 Oct 2026.</li>
+    <li>KFF, "Court Decision Eases Burden of Proof to Qualify for Medical Frailty Exclusion to Medicaid Work Requirements", 2 Nov 2026.</li>
+    <li>KCRA, "2026 midterm elections: 8 charts explain Democratic sweep", 5 Nov 2026 (House and Senate seat counts).</li>
+    <li>KTTC, "Rob Sand wins Iowa governor's race", 4 Nov 2026.</li>
+    <li>270toWin, "One Week Later: Uncalled Races from the 2026 Midterm Election", 10 Nov 2026 (Democratic Senate flip in Texas).</li>
+    <li>Pan American Health Organization, "PAHO urges countries to step up efforts to stop measles outbreaks and move towards elimination in the Americas", 17 Nov 2026.</li>
+    <li>The Hill, "US loses measles elimination status after more than 25 years", 17 Nov 2026.</li>
+    <li>Contemporary Pediatrics, "US loses measles elimination status; CDC outlines re-elimination plan", 17 Nov 2026.</li>
+    <li>Contagion Live, "Measles Update: November 20, 2026", 20 Nov 2026 (CDC count of 5,838 cases).</li>
+    <li>U.S. Senate Committee on Finance, "Wyden and Alsobrooks Probe Gifts to RFK Jr. From Top Donor", 11 Nov 2026.</li>
+    <li>Law Commentary, "RFK Jr. Faces Renewed Impeachment Calls as Congress Opens Investigations", 18 Nov 2026.</li>
+  </ol>
+  <p>Proposals in this ledger are editorial suggestions, not drafted legislation. Statuses show where each initiative stood at the edition date above.</p>
+</section>
+</div>
+
+<script>
+const ITEMS = [
+// ---------- VACCINES & OUTBREAKS ----------
+{p:"Vaccines and outbreaks",k:"reverse",t:"Make ACIP independent by law",
+ did:"Fired all 17 ACIP members in June 2025 and installed allies; a federal judge stayed 13 of the appointments and every vote they took on 16 March 2026. HHS is appealing.",
+ fix:"An ACIP Integrity Act: fixed staggered terms, removal only for cause, published qualification and conflict rules, and a requirement that CDC schedule changes go through ACIP and public comment.",
+ lev:["Appropriations","Bipartisan bill"],m:"split",pr:1,
+ why:"Cassidy and other GOP physicians objected to the firings. A rider barring funds for any schedule change made outside ACIP is the realistic first step."},
+{p:"Vaccines and outbreaks",k:"reverse",t:"Lock the pre-2026 childhood schedule into coverage",
+ did:"Cut universally recommended childhood vaccines from 17 diseases to 11 on 5 January 2026, without ACIP. The court stay restored the old schedule for now; the August 2026 executive order pushes the narrower one again.",
+ fix:"Tie ACA no-cost coverage and Vaccines for Children eligibility to the schedule in force on 1 January 2025 until a lawfully constituted ACIP changes it.",
+ lev:["Appropriations","Courts"],m:"opposed",pr:1,
+ why:"Protects families' access whatever happens on appeal. Expect MAHA resistance; the case rests on access and cost, which polls well."},
+{p:"Vaccines and outbreaks",k:"build",t:"Fund a national measles response",
+ did:"5,838 CDC-confirmed cases in 2026 as of 19 November, the most since 1991. States report 10 deaths; the CDC lists six after Kennedy asked it not to count state-reported deaths. On 17 November 2026 PAHO announced that endemic transmission had been re-established and withdrew the measles elimination status the U.S. had held since 2000; to regain it, the U.S. must submit a corrective action plan and then go at least 12 months without endemic spread. Kennedy pledged to regain the status and said he continues to recommend the MMR vaccine. The CDC says it has added about $100 million for state and local health departments since August, with no timeline or benchmarks. A Johns Hopkins tool puts this year's cost at nearly $83 million, mostly contact tracing. A former ACIP chair said there had been virtually no national messaging or ad campaign.",
+ fix:"Emergency supplemental for state immunisation grants, outbreak strike teams, catch-up MMR clinics and a national campaign fronted by local paediatricians rather than federal officials.",
+ lev:["Appropriations","States"],m:"split",pr:1,
+ why:"The single most visible result Congress could show in 2027, and it pays for itself: vaccinating is cheaper than tracing contacts. Trusted local messengers matter more than federal voices for hesitant parents."},
+{p:"Vaccines and outbreaks",k:"reverse",t:"Correct the CDC autism page",
+ did:"Personally directed the CDC in November 2025 to say that 'vaccines do not cause autism' is not an evidence-based claim, with no new evidence.",
+ fix:"A Scientific Integrity Act that bars political appointees from altering agency scientific content without documented scientific review, with IG enforcement.",
+ lev:["Bipartisan bill","Oversight"],m:"opposed",pr:2,
+ why:"Hearings can establish who ordered the change. Codifying integrity rules is a long-term protection beyond Kennedy."},
+{p:"Vaccines and outbreaks",k:"repair",t:"Fix vaccine-injury compensation properly",
+ did:"Launched an injury initiative on 8 October 2026: an NIH clinic, a proposed billing code paying doctors per VAERS report, and plans to rework the compensation programme.",
+ fix:"Keep better surveillance and fund the Vaccine Safety Datalink. Drop per-report payments, which reward volume over accuracy. Modernise the Vaccine Injury Compensation Program: more special masters, faster awards, an updated injury table set by independent scientists.",
+ lev:["Bipartisan bill","Oversight"],m:"shared",pr:2,
+ why:"Real common ground. MAHA families want a fair hearing; Democrats can offer a credible system instead of an advocacy platform."},
+{p:"Vaccines and outbreaks",k:"reverse",t:"Restart mRNA and pandemic preparedness",
+ did:"Terminated about $500 million in BARDA mRNA vaccine contracts; the CDC director rejected the UN pandemic-preparedness declaration on 25 September 2026.",
+ fix:"Restore mRNA platform funding through BARDA with domestic-manufacturing conditions; fund the Strategic National Stockpile; frame it as national security against China's biotech push.",
+ lev:["Appropriations"],m:"opposed",pr:2,
+ why:"National-security framing can draw defence-minded Republicans who would not vote for a 'vaccine' bill."},
+
+// ---------- SCIENCE & AGENCIES ----------
+{p:"Science and agencies",k:"repair",t:"Restore NIH grants and stop impoundment",
+ did:"Oversaw billions in cancelled NIH research projects. Congress refused the proposed 40% cut and raised NIH by $415 million, yet terminations continued.",
+ fix:"Reinstate terminated grants on merit, require apportionment reports to appropriators, and write anti-impoundment language with deadlines into the Labor-HHS bill.",
+ lev:["Appropriations"],m:"split",pr:1,
+ why:"NIH funding already has bipartisan support in the Senate Appropriations Committee. Strongest lever on the list."},
+{p:"Science and agencies",k:"repair",t:"Rebuild the CDC and HHS workforce",
+ did:"Announced about 10,000 job cuts in March 2025 and five regional office closures; senior CDC leadership resigned in waves.",
+ fix:"Fund rehiring for surveillance, labs, NIOSH and childhood lead programmes; require congressional notice before any further reduction in force at public-health agencies.",
+ lev:["Appropriations","Oversight"],m:"split",pr:2,
+ why:"Frame around outbreak detection and workplace safety, which affect every district."},
+{p:"Science and agencies",k:"reverse",t:"Protect the Preventive Services Task Force",
+ did:"Overhauled the USPSTF on 17 September 2026, the same day as his Children's Health Defense speech.",
+ fix:"Statutory terms and for-cause removal for USPSTF members, so free preventive coverage under the ACA rests on independent evidence reviews.",
+ lev:["Bipartisan bill","Appropriations"],m:"split",pr:2,
+ why:"Cancer screening and preventive care are popular across parties."},
+{p:"Science and agencies",k:"build",t:"Investigate decision-making at HHS",
+ did:"A string of decisions taken without advisers, public comment or published evidence, from the schedule memo to the autism page to peptides.",
+ fix:"Oversight hearings with document subpoenas on the schedule memo, ACIP appointments, the Medicaid funding freeze on California and Minnesota, and the peptide policy. Refer findings to the HHS Inspector General and GAO.",
+ lev:["Oversight"],m:"split",pr:1,
+ why:"Incoming Oversight chair Robert Garcia has named Kennedy as a possible impeachment target. Removal needs 67 Senate votes, which Democrats do not have; a factual record is achievable. On 11 November 2026 Senators Ron Wyden and Angela Alsobrooks asked Children's Health Defense for documents on Kennedy's 2019 Samoa trip and confirmation testimony, due 4 December. On the same date they opened a second inquiry into about $250,000 in flights and lodging Kennedy received from donor Gavin de Becker, asking whether the gifts met federal ethics rules."},
+{p:"Science and agencies",k:"reverse",t:"Restore public comment on HHS rules",
+ did:"Rep. Haley Stevens's impeachment articles allege Kennedy ended public comment for HHS rulemaking.",
+ fix:"Require notice-and-comment for HHS rules affecting coverage, vaccines and compounding, with a funding bar on rules issued without it.",
+ lev:["Appropriations"],m:"shared",pr:3,
+ why:"Transparency is a stated MAHA value; it is hard for either side to oppose openly."},
+
+// ---------- DRUGS & WELLNESS MARKET ----------
+{p:"Drugs and the wellness market",k:"reverse",t:"Put peptides back under FDA science",
+ did:"Issued an enforcement-discretion policy in late October 2026 letting pharmacies compound six unapproved peptides, including BPC-157, against the view of FDA staff scientists.",
+ fix:"Revoke the policy by rider and require FDA scientific review before any substance moves off the 'do not compound' list. Pair it with funded trials of the most popular peptides so users get answers.",
+ lev:["Appropriations","Oversight"],m:"opposed",pr:2,
+ why:"Many MAHA followers use these products. Offering real trials, rather than a flat ban, respects their interest while protecting safety."},
+{p:"Drugs and the wellness market",k:"keep",t:"Curb drug advertising on television",
+ did:"Kennedy and MAHA have attacked direct-to-consumer drug ads.",
+ fix:"Legislate disclosure and limits, such as ending the tax deduction for DTC drug advertising, rather than relying on agency letters.",
+ lev:["Bipartisan bill"],m:"shared",pr:3,
+ why:"A long-standing progressive idea that MAHA also champions."},
+
+// ---------- COVERAGE ----------
+{p:"Coverage and cost",k:"reverse",t:"Undo or delay the Medicaid cuts",
+ did:"Defended nearly $1 trillion in Medicaid reductions over ten years, mostly through work requirements, while insisting they are not cuts. Five Democratic governors asked for readiness-based compliance dates. On 13 November 2026 CMS let states opt for a 'hold harmless' period to 30 June 2027, pausing denials and disenrolments, though requirements still start on 1 January 2027. A federal judge in Boston ruled on 29 October 2026 that CMS had exceeded its authority by making medically frail people also prove they cannot work; the narrower test now applies nationwide.",
+ fix:"Delay work requirements until states certify readiness, restore funding lost, and protect rural hospitals. Full repeal will need a future signature.",
+ lev:["Appropriations","States"],m:"split",pr:1,
+ why:"Health costs were MAHA voters' top concern in polling, ahead of food safety. Affordability is the bridge."},
+{p:"Coverage and cost",k:"build",t:"Pay for food as medicine",
+ did:"MAHA talks about chronic disease; little has changed in what Medicare and Medicaid pay for.",
+ fix:"Cover medically tailored meals and nutrition counselling for diet-related disease in Medicare and Medicaid, and expand produce-prescription pilots.",
+ lev:["Bipartisan bill","Appropriations"],m:"shared",pr:2,
+ why:"Turns MAHA rhetoric into a benefit families can feel. Strong bipartisan pilot history."},
+
+// ---------- FOOD ----------
+{p:"Food and nutrition",k:"keep",t:"Write the synthetic dye phase-out into law",
+ did:"Pressed industry to drop petroleum-based dyes; most major firms pledged voluntarily. Kennedy promised all nine would be gone by end-2026.",
+ fix:"Codify the phase-out with a firm date and enforcement, so it survives a change of administration.",
+ lev:["Bipartisan bill"],m:"shared",pr:1,
+ why:"Kennedy's clearest win. Democrats gain credibility by locking it in rather than dismissing it."},
+{p:"Food and nutrition",k:"keep",t:"Close the GRAS loophole",
+ did:"FDA proposed a rule on 10 August 2026 requiring companies to notify the agency, with their safety rationale, before adding a new ingredient, with a 180-day review. It stops short of requiring FDA approval, which the agency says only Congress can mandate.",
+ fix:"Statute requiring FDA notification and public data for every new additive, plus a schedule for reviewing older ones.",
+ lev:["Bipartisan bill"],m:"shared",pr:1,
+ why:"California's AB 2034 points the same way. A natural first joint bill."},
+{p:"Food and nutrition",k:"repair",t:"Define ultra-processed food on evidence",
+ did:"Promised a federal definition and labelling by April 2026. FDA said on 10 August 2026 that a definition was complete and sent it to the White House; as of late October it had not been released, despite a petition from more than 80 nutrition experts.",
+ fix:"Direct FDA and USDA to adopt a science-based definition with front-of-pack labels, after independent review.",
+ lev:["Appropriations","Bipartisan bill"],m:"shared",pr:2,
+ why:"Without a definition, every SNAP and school-meal rule rests on guesswork."},
+{p:"Food and nutrition",k:"repair",t:"Pair SNAP limits with incentives",
+ did:"USDA approved waivers letting 18 states block soda and candy purchases with SNAP in 2026.",
+ fix:"Let state limits stand where wanted, but fund fruit-and-vegetable incentives such as Double Up Food Bucks nationally and reverse SNAP benefit cuts.",
+ lev:["Appropriations","States"],m:"split",pr:2,
+ why:"Restrictions alone read as punishment. Incentives make it about access, which Democrats and MAHA can both back."},
+{p:"Food and nutrition",k:"build",t:"Fund scratch-cooked school meals",
+ did:"Kennedy says about 70% of school meals are ultra-processed.",
+ fix:"Kitchen-equipment grants, farm-to-school purchasing and a higher reimbursement rate for meals cooked on site.",
+ lev:["Appropriations","Bipartisan bill"],m:"shared",pr:2,
+ why:"Concrete and local; school boards in every district notice."},
+
+// ---------- CHEMICALS & ENVIRONMENT ----------
+{p:"Chemicals and environment",k:"reverse",t:"Repeal glyphosate liability immunity",
+ did:"Backed Trump's 18 February 2026 order using the Defense Production Act to boost glyphosate output and shield makers, after years calling it a likely culprit in chronic disease.",
+ fix:"Pass the No Immunity for Glyphosate Act, introduced by Republican Thomas Massie, and fund independent review of glyphosate health evidence.",
+ lev:["Bipartisan bill"],m:"shared",pr:1,
+ why:"The issue that split MAHA from the White House. A Republican-authored bill makes it the best test of a veto-proof coalition."},
+{p:"Chemicals and environment",k:"reverse",t:"Restore PFAS drinking-water limits",
+ did:"The EPA rolled back limits on 'forever chemicals' in drinking water, drawing MAHA criticism.",
+ fix:"Codify enforceable PFAS standards and fund utilities to meet them.",
+ lev:["Bipartisan bill","Appropriations"],m:"shared",pr:2,
+ why:"Clean water unites suburban parents of every party."},
+{p:"Chemicals and environment",k:"build",t:"Review pesticides banned abroad",
+ did:"MAHA's pesticide goals went largely unmet; Kennedy has said agricultural chemicals are the EPA's job, not his.",
+ fix:"Require EPA to review pesticides banned in comparable countries on a fixed timetable, and add HHS health input to EPA registration.",
+ lev:["Bipartisan bill","Oversight"],m:"shared",pr:2,
+ why:"Michigan's Abdul El-Sayed ran on this and won. Farm-state politics will need care."},
+{p:"Chemicals and environment",k:"build",t:"Get lead and microplastics out of water",
+ did:"Kennedy's MAHA report raised environmental exposures; federal funding has not followed.",
+ fix:"Fully fund lead service-line replacement and a national microplastics monitoring and research programme.",
+ lev:["Appropriations"],m:"shared",pr:3,
+ why:"Infrastructure money with health benefits, popular in older towns of every stripe."},
+];
+
+const KINDS = {reverse:"Reverse",repair:"Repair",keep:"Keep",build:"Build"};
+const MAHA = {shared:"MAHA ally likely",split:"MAHA split",opposed:"MAHA likely opposed"};
+const LEVERS = ["Appropriations","Oversight","Bipartisan bill","Courts","States"];
+const STATUS_CLASS = {"Not started":"","Drafted":"moving","Introduced":"moving","In appropriations":"moving","Passed a chamber":"moving","Enacted":"done","Vetoed":"blocked","Blocked":"blocked"};
+const PRIO = {"1":"First 100 days","2":"First year","3":"Longer term"};
+const state = {prio:new Set(), kind:new Set(), maha:new Set(), lever:new Set(), q:""};
+
+function chips(id, entries, set){
+  const el = document.getElementById(id);
+  entries.forEach(([val,label])=>{
+    const b = document.createElement("button");
+    b.className="chip"; b.type="button"; b.textContent=label; b.setAttribute("aria-pressed","false");
+    b.id = id+"-"+val.replace(/\s+/g,"-").toLowerCase();
+    b.addEventListener("click",()=>{
+      if(set.has(val)){set.delete(val);b.setAttribute("aria-pressed","false");}
+      else{set.add(val);b.setAttribute("aria-pressed","true");}
+      render();
+    });
+    el.appendChild(b);
+  });
+}
+chips("f-prio", Object.entries(PRIO), state.prio);
+chips("f-kind", Object.entries(KINDS), state.kind);
+chips("f-maha", Object.entries(MAHA), state.maha);
+chips("f-lever", LEVERS.map(l=>[l,l]), state.lever);
+document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value.trim().toLowerCase();render();});
+
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function render(){
+  const list = ITEMS.map((it,i)=>({...it,i})).filter(it=>{
+    if(state.prio.size && !state.prio.has(String(it.pr))) return false;
+    if(state.kind.size && !state.kind.has(it.k)) return false;
+    if(state.maha.size && !state.maha.has(it.m)) return false;
+    if(state.lever.size && !it.lev.some(l=>state.lever.has(l))) return false;
+    if(state.q){
+      const hay=(it.t+" "+it.did+" "+it.fix+" "+it.why+" "+it.p).toLowerCase();
+      if(!hay.includes(state.q)) return false;
+    }
+    return true;
+  });
+  const t = document.getElementById("tally");
+  const c = k=>list.filter(x=>x.k===k).length;
+  t.innerHTML = `<span><strong>${list.length}</strong> of ${ITEMS.length} initiatives</span>
+    <span><strong>${c("reverse")}</strong> reversals</span>
+    <span><strong>${c("repair")}</strong> repairs</span>
+    <span><strong>${c("keep")}</strong> keep</span>
+    <span><strong>${c("build")}</strong> new</span>
+    <span><strong>${list.filter(x=>x.m==="shared").length}</strong> with likely MAHA allies</span>
+    <span><strong>${list.filter(x=>x.pr===1).length}</strong> first-100-days</span>`;
+  const main = document.getElementById("ledger");
+  if(!list.length){main.innerHTML='<p class="empty">No initiatives match these filters. Clear a filter to see more.</p>';return;}
+  const groups = {};
+  list.forEach(it=>{(groups[it.p]=groups[it.p]||[]).push(it);});
+  Object.values(groups).forEach(arr=>arr.sort((a,b)=>a.pr-b.pr||a.i-b.i));
+  main.innerHTML = Object.entries(groups).map(([p,arr])=>`
+    <h2 class="pillar">${esc(p)} <small>${arr.length} ${arr.length===1?"entry":"entries"}</small></h2>
+    <div class="grid">${arr.map(it=>card(it)).join("")}</div>`).join("");
+}
+function card(it){
+  const prio = it.pr===1?"First 100 days":it.pr===2?"First year":"Longer term";
+  const cur = it.st||"Not started";
+  return `<article class="card k-${it.k}">
+    <div class="tags">${it.pr===1?'<span class="tag" style="background:var(--ink);color:var(--surface);border-color:transparent">First 100 days</span>':""}<span class="tag ${it.k}">${KINDS[it.k]}</span><span class="tag ${it.m}">${MAHA[it.m]}</span>${it.lev.map(l=>`<span class="tag">${l}</span>`).join("")}</div>
+    <h3>${esc(it.t)}</h3>
+    <div class="sec"><em>What Kennedy did</em><p>${esc(it.did)}</p></div>
+    <div class="sec"><em>What Congress should do</em><p>${esc(it.fix)}</p></div>
+    <details><summary>Politics and path</summary><p>${esc(it.why)}</p></details>
+    <div class="foot"><span class="prio">Priority: <b>${prio}</b></span>
+      <span class="st ${STATUS_CLASS[cur]||""}" title="Status as of the latest edition">${esc(cur)}</span>
+    </div>
+  </article>`;
+}
+render();
+</script>
+</body>
+</html>
+
+</body></html>

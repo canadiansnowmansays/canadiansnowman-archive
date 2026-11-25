@@ -1,0 +1,384 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Code Blue Ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: a legislative ledger in clinical blue. Fiscal tally first, then one ruled row per section, then what changed, then the "going further" menu. */
+:root{
+  --paper:#f5f7f9; --sheet:#ffffff; --ink:#18232e; --muted:#566573;
+  --rule:#cfd8e0; --code:#1f5f9e; --code-soft:#e2ecf6; --cost:#a3402c; --cost-soft:#f6e6e1;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --label:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#10161c; --sheet:#171f27; --ink:#e1e8ee; --muted:#98a7b4;
+  --rule:#2b3844; --code:#7fb3e6; --code-soft:#1b2b3b; --cost:#e08a74; --cost-soft:#3a2420; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#10161c; --sheet:#171f27; --ink:#e1e8ee; --muted:#98a7b4;
+  --rule:#2b3844; --code:#7fb3e6; --code-soft:#1b2b3b; --cost:#e08a74; --cost-soft:#3a2420; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;padding-inline:16px;padding-block:32px 64px}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:40px}
+a{color:var(--code)}
+a:focus-visible,summary:focus-visible,button:focus-visible{outline:2px solid var(--code);outline-offset:3px}
+.eyebrow,.lbl{font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted);font-weight:600}
+h1{font-weight:600;font-size:clamp(30px,5vw,44px);line-height:1.1;margin:6px 0 10px;text-wrap:balance}
+h2{font-family:var(--label);font-weight:600;font-size:20px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+h3{font-family:var(--label);font-size:16px;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+p{margin:0 0 12px}
+.lede{max-width:65ch;margin:0}
+.byline{font-family:var(--label);font-size:15px;color:var(--muted);margin-top:12px}
+.notice{background:var(--code-soft);border-left:4px solid var(--code);padding:14px 18px;font-size:15.5px;max-width:80ch}
+.notice p:last-child{margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.tally{background:var(--sheet);border:1px solid var(--rule);padding:22px;display:grid;gap:18px}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px}
+.fig .v{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1.2}
+.fig .d{font-size:15px;color:var(--muted);line-height:1.4}
+.bars{display:grid;gap:10px}
+.barrow{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;font-family:var(--label);font-size:14px}
+.track{height:28px;border:1px solid var(--rule);display:flex}
+.seg{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--sheet);overflow:hidden;white-space:nowrap;border-right:1px solid var(--sheet)}
+.seg.cost{background:var(--cost)} .seg.cost.b{opacity:.8} .seg.cost.c{opacity:.62}
+.seg.save{background:var(--code)} .seg.save.b{opacity:.75}
+.note{font-size:14px;color:var(--muted);margin:0;max-width:80ch}
+
+.tablewrap{overflow-x:auto;background:var(--sheet);border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+.wide{min-width:760px}
+th{font-family:var(--label);text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink);font-weight:600}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+td.sec{font-family:var(--mono);white-space:nowrap}
+td.r,th.r{text-align:right;font-family:var(--mono);white-space:nowrap}
+tr.title td{background:var(--paper);font-family:var(--label);text-transform:uppercase;letter-spacing:.06em;font-size:12px;font-weight:600;color:var(--muted);padding:7px 12px}
+tr.total td{border-top:2px solid var(--ink);border-bottom:0;font-weight:600}
+.pos{color:var(--code)} .neg{color:var(--cost)}
+.pill{display:inline-block;font-family:var(--label);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:1px 8px;border:1px solid currentColor;white-space:nowrap}
+.kept{color:var(--code)} .scaled{color:var(--muted)} .further{color:var(--ink)} .dropped{color:var(--cost)}
+
+.sides{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.side{background:var(--sheet);border:1px solid var(--rule);padding:18px 20px;min-width:0}
+.side ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15.5px}
+.side .lbl{display:block;margin:12px 0 6px}
+.side .lbl:first-of-type{margin-top:0}
+
+.bill{background:var(--sheet);border:1px solid var(--rule);padding:24px clamp(18px,4vw,44px);display:grid;gap:8px}
+.titlehead{font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-size:15px;font-weight:600;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)}
+details{border-bottom:1px solid var(--rule)}
+summary{cursor:pointer;list-style:none;display:flex;gap:12px;align-items:baseline;padding:12px 0;font-family:var(--label);font-weight:600;font-size:16px}
+summary::-webkit-details-marker{display:none}
+summary .s{font-family:var(--mono);font-weight:500;min-width:72px;color:var(--code)}
+summary::after{content:"+";margin-left:auto;font-family:var(--mono);color:var(--muted)}
+details[open] summary::after{content:"−"}
+.text{padding:0 0 14px 84px;max-width:calc(70ch + 84px);font-size:16px}
+.text dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:0}
+.text dt{font-family:var(--label);font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:3px}
+.text dd{margin:0}
+@media (max-width:560px){.text{padding-left:0}.text dl{grid-template-columns:1fr}.text dt{padding-top:8px}}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+button{font-family:var(--label);font-size:14px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:transparent;color:var(--ink);border:1px solid var(--ink);padding:6px 12px;cursor:pointer}
+button:hover{background:var(--ink);color:var(--sheet)}
+.sources{font-size:15px;max-width:80ch;display:grid;gap:8px}
+.sources p{margin:0}
+footer{font-size:14px;color:var(--muted);border-top:1px solid var(--rule);padding-top:16px}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Code Blue · Companion ledger to Part 10 · Revised October 2026</div>
+  <h1>The American Health Security Act of 2027</h1>
+  <p class="lede">A neighbour's draft of a U.S. health bill, rebuilt after review. It takes the steps that have already won support from both parties, pays for them with savings the Congressional Budget Office has scored, and keeps universal coverage as the long-term goal. The bigger reforms are set out separately, with their costs, under "Going further".</p>
+  <div class="byline">Drafted by Stephen Gordon, CanadianSnowmanSays, with Claude. Not legislative counsel; all figures are estimates from scores of similar provisions, not an official score of this bill.</div>
+</header>
+
+<div class="notice">
+  <p><strong>Why this was revised.</strong> The version published on December 18, 2025 claimed to be "10 titles, 52 sections, fully scored". It had 5 titles and 22 sections, had never been scored, and its arithmetic did not add up: it counted savings to employers and households as federal deficit reduction, cited the wrong Swiss and German statutes, and listed senators as sponsors who had never agreed. This ledger replaces it. What changed, section by section, is set out below.</p>
+</div>
+
+<section class="tally" aria-labelledby="tally-h">
+  <div class="lbl" id="tally-h">Ten-year federal budget effect, indicative</div>
+  <div class="figs">
+    <div class="fig"><div class="v">+$119.8B</div><div class="d">Costs: three years of restored premium subsidies, the Medicaid expansion incentive, 14,000 residency positions</div></div>
+    <div class="fig"><div class="v">−$160.2B</div><div class="d">Savings: site-neutral hospital outpatient payment, price transparency, Medicaid spread-pricing ban</div></div>
+    <div class="fig"><div class="v">≈ −$40B</div><div class="d">Net, before an official score. Designed to be deficit-neutral, not sold as deficit reduction</div></div>
+    <div class="fig"><div class="v">+3–4M</div><div class="d">More insured in 2027–28 from the subsidy provision alone (CBO, H.R. 1834)</div></div>
+  </div>
+  <div class="bars" role="img" aria-label="Costs of 119.8 billion dollars against savings of 160.2 billion dollars over ten years. Costs: subsidies 80.6, Medicaid incentive 14.0, residencies 25.2. Savings: site-neutral 156.9, transparency 2.2, spread pricing 1.1.">
+    <div class="barrow"><span>Costs</span><div class="track"><div class="seg cost" style="width:50.3%">Subsidies 80.6</div><div class="seg cost b" style="width:8.7%">14.0</div><div class="seg cost c" style="width:15.7%">GME 25.2</div></div></div>
+    <div class="barrow"><span>Savings</span><div class="track"><div class="seg save" style="width:97.9%">Site-neutral payment 156.9</div><div class="seg save b" style="width:2.1%"></div></div></div>
+  </div>
+  <p class="note">Bars are drawn to the same scale ($160.2B = full width). The site-neutral figure is an upper bound: CBO's option starts in 2026 and this bill starts in 2028 with a phase-in. If that reform is narrowed to the easiest version (imaging only, $7.6B), the bill would add about $109B, and the safeguard in Section 502 shortens the subsidy extension. Sections 103 and 203 are not scored and are not in the total.</p>
+</section>
+
+<section aria-labelledby="ledger-h">
+  <h2 id="ledger-h">Section ledger</h2>
+  <div class="tablewrap">
+  <table class="wide">
+    <thead><tr><th>Sec.</th><th>Provision</th><th>Who it affects</th><th>Starts</th><th class="r">10-yr effect</th></tr></thead>
+    <tbody>
+      <tr class="title"><td colspan="5">Title I · Keeping people covered</td></tr>
+      <tr><td class="sec">101</td><td>Restore the enhanced ACA premium tax credits for three years: contributions capped at 8.5% of income, no cliff at 400% of poverty</td><td>Marketplace enrollees, especially older middle-income people</td><td class="num">2027</td><td class="r neg">+$80.6B</td></tr>
+      <tr><td class="sec">102</td><td>Restore the incentive for states that newly expand Medicaid (5-point match bonus for two years), repealed in 2025</td><td>The ten non-expansion states; about 1.2M adults in the coverage gap</td><td class="num">On enactment</td><td class="r neg">+$14.0B</td></tr>
+      <tr><td class="sec">103</td><td>Pre-filled marketplace applications, plus a multi-state demonstration of automatic enrolment for SNAP and unemployment recipients</td><td>Eligible uninsured people</td><td class="num">2028</td><td class="r">not scored</td></tr>
+      <tr class="title"><td colspan="5">Title II · Honest prices</td></tr>
+      <tr><td class="sec">201</td><td>Write hospital and insurer price transparency into law, extend it to labs, imaging and surgery centres, and require insurers to publish denial and overhead data</td><td>Hospitals, insurers, patients comparing prices</td><td class="num">+12 months</td><td class="r pos">−$2.2B</td></tr>
+      <tr><td class="sec">202</td><td>Site-neutral payment: Medicare pays hospital outpatient departments the physician-office rate for services safely done in offices; rural and critical access hospitals exempt</td><td>Hospital-owned outpatient departments; Medicare patients pay lower coinsurance</td><td class="num">2028–2031</td><td class="r pos">−$156.9B</td></tr>
+      <tr><td class="sec">203</td><td>Bring ground ambulances under the No Surprises Act, with cost-sharing capped at in-network levels</td><td>Patients transported by ambulance</td><td class="num">+18 months</td><td class="r">not scored</td></tr>
+      <tr class="title"><td colspan="5">Title III · Drug prices and pharmacy benefit managers</td></tr>
+      <tr><td class="sec">301</td><td>Ban "spread pricing" by pharmacy benefit managers in Medicaid, the piece left out of the February 2026 reforms</td><td>Medicaid managed-care plans and pharmacies</td><td class="num">+18 months</td><td class="r pos">−$1.1B</td></tr>
+      <tr><td class="sec">302</td><td>Protect the existing Medicare drug negotiation schedule; GAO study of the 2025 orphan-drug change</td><td>Medicare Part D and Part B</td><td class="num">n/a</td><td class="r">none</td></tr>
+      <tr class="title"><td colspan="5">Title IV · Workforce</td></tr>
+      <tr><td class="sec">401</td><td>14,000 new Medicare-funded residency positions over seven years, prioritising rural and primary care</td><td>Teaching hospitals; underserved areas</td><td class="num">FY2028</td><td class="r neg">≈ +$25.2B</td></tr>
+      <tr class="title"><td colspan="5">Title V · Accountability</td></tr>
+      <tr><td class="sec">501</td><td>Annual public report and dashboard on coverage, prices and the effects of the 2025 Medicaid changes</td><td>Public and Congress</td><td class="num">Annual</td><td class="r">negligible</td></tr>
+      <tr><td class="sec">502</td><td>Pay-as-you-go safeguard: the subsidy and residency provisions take effect only if CBO certifies the savings cover them; otherwise the subsidy extension shrinks to two years</td><td>The deficit</td><td class="num">On enactment</td><td class="r">—</td></tr>
+      <tr class="total"><td></td><td>Net before an official score</td><td></td><td></td><td class="r pos">≈ −$40B</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="sides-h">
+  <h2 id="sides-h">What each side gets, and what each gives up</h2>
+  <div class="sides">
+    <div class="side">
+      <h3>Republicans</h3>
+      <span class="lbl">Get</span>
+      <ul>
+        <li>Site-neutral payment and price transparency, both long championed by Republican health leaders</li>
+        <li>A bill paid for with spending savings, not tax increases</li>
+        <li>No public option, no mandate, no all-payer price controls</li>
+        <li>A pay-as-you-go safeguard on new spending</li>
+      </ul>
+      <span class="lbl">Give up</span>
+      <ul>
+        <li>Three more years of the enhanced subsidies they let expire</li>
+        <li>Restoring the Medicaid expansion incentive their 2025 law repealed</li>
+      </ul>
+    </div>
+    <div class="side">
+      <h3>Democrats</h3>
+      <span class="lbl">Get</span>
+      <ul>
+        <li>The subsidy extension the House passed 230–196 in January 2026</li>
+        <li>A renewed push for Medicaid expansion</li>
+        <li>An end to surprise ambulance bills</li>
+        <li>More doctors in underserved areas</li>
+      </ul>
+      <span class="lbl">Give up</span>
+      <ul>
+        <li>The public option, Medicare at 60 and a $2,000 cap, moved to "Going further"</li>
+        <li>New taxes on high earners, also moved there</li>
+        <li>A large payment cut to hospitals, which many of their members' hospitals oppose</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="text-h">
+  <h2 id="text-h">Section-by-section outline</h2>
+  <p class="note" style="margin-bottom:12px">This is an outline for legislative counsel, not finished statutory text. Each section names the law it would amend where that is known with confidence.</p>
+  <div class="tools"><button type="button" id="openAll">Expand all</button><button type="button" id="closeAll">Collapse all</button></div>
+  <div class="bill">
+    <div class="titlehead" style="margin-top:0;padding-top:0;border-top:0">Title I · Keeping people covered</div>
+    <details id="sec-101"><summary><span class="s">Sec. 101</span>Restore the enhanced premium tax credit, 2027–2029</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Re-enacts the 2021–2025 subsidy schedule for plan years 2027–2029: no one pays more than 8.5% of income for a benchmark plan, and the lowest-income enrollees pay nothing. A minimum monthly premium and income ceiling, as in the Senate's stalled two-year framework, could lower the cost.</dd>
+      <dt>Amends</dt><dd>Internal Revenue Code §36B(b)(3)(A)(iii).</dd>
+      <dt>Estimate</dt><dd>About +$80.6B over ten years; +3.0M insured in 2027 and +4.0M in 2028. Proxy: CBO's estimate for H.R. 1834 (three years, 2026–2028), January 8, 2026.</dd>
+      <dt>Status</dt><dd>The enhanced credits expired December 31, 2025. The House passed H.R. 1834 on January 8, 2026; the Senate has not voted. As of October 2026, no extension has become law.</dd>
+    </dl></div></details>
+    <details id="sec-102"><summary><span class="s">Sec. 102</span>Restore the Medicaid expansion incentive</summary><div class="text"><dl>
+      <dt>Does</dt><dd>For states that newly expand Medicaid, raises the federal match on their regular Medicaid population by 5 points for two years, as the American Rescue Plan did before the 2025 reconciliation law repealed it.</dd>
+      <dt>Amends</dt><dd>Social Security Act §1905, restoring subsection (ii), added by ARPA §9814 and repealed by the 2025 reconciliation law (§71114) effective January 1, 2026.</dd>
+      <dt>Estimate</dt><dd>About +$14.0B; about +100,000 insured, depending on states choosing to expand. Proxy: the mirror image of CBO's score of the repeal.</dd>
+    </dl></div></details>
+    <details id="sec-103"><summary><span class="s">Sec. 103</span>Simpler enrolment</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Lets marketplaces pre-fill applications with IRS and Social Security data, with consent, and funds a multi-state demonstration that enrols SNAP and unemployment recipients in a $0-premium plan unless they opt out.</dd>
+      <dt>Amends</dt><dd>ACA §1411 (42 U.S.C. 18081); IRC §6103 for data sharing.</dd>
+      <dt>Estimate</dt><dd>Not scored. Automatic enrolment raises subsidy spending, so this must be scored before it counts.</dd>
+    </dl></div></details>
+
+    <div class="titlehead">Title II · Honest prices</div>
+    <details id="sec-201"><summary><span class="s">Sec. 201</span>Price transparency, codified</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Puts the hospital and insurer price-transparency rules into statute, extends them to labs, imaging and ambulatory surgery centres, requires insurers to publish claims-denial, prior-authorisation and overhead data, and raises penalties. Follows the Lower Costs, More Transparency Act (H.R. 9393), reported 45–0 by the House Energy and Commerce Committee on July 21, 2026.</dd>
+      <dt>Amends</dt><dd>Public Health Service Act §2718(e) and §2715A; ERISA §715; IRC §9815.</dd>
+      <dt>Estimate</dt><dd>About −$2.2B (upper bound). Proxy: CBO's score of the same provision in the 2023 version, H.R. 5378 §106.</dd>
+    </dl></div></details>
+    <details id="sec-202"><summary><span class="s">Sec. 202</span>Site-neutral Medicare payment</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Pays hospital outpatient departments the physician-office rate for services commonly and safely provided in a doctor's office, phased in over four years. Rural sole community hospitals and critical access hospitals are exempt. Does not duplicate CMS's 2026 rule on drug administration.</dd>
+      <dt>Amends</dt><dd>Social Security Act §1833(t).</dd>
+      <dt>Estimate</dt><dd>Up to −$156.9B. Source: CBO budget option "Reduce Payments for Hospital Outpatient Departments", December 12, 2024. A 2028 start saves less within the window.</dd>
+      <dt>Note</dt><dd>This is the bill's main offset and its hardest vote. Hospitals oppose it strongly.</dd>
+    </dl></div></details>
+    <details id="sec-203"><summary><span class="s">Sec. 203</span>End surprise ambulance bills</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Brings ground ambulances under the No Surprises Act, caps patient cost-sharing at in-network levels, and uses state-set rates where they exist, as recommended by the federal Advisory Committee on Ground Ambulance and Patient Billing. Existing contracts are grandfathered for 24 months.</dd>
+      <dt>Amends</dt><dd>Public Health Service Act title XXVII, part D, with parallel ERISA and IRC amendments.</dd>
+      <dt>Estimate</dt><dd>Not scored. Likely small federal effect.</dd>
+    </dl></div></details>
+
+    <div class="titlehead">Title III · Drug prices and pharmacy benefit managers</div>
+    <details id="sec-301"><summary><span class="s">Sec. 301</span>Ban spread pricing in Medicaid</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Requires Medicaid managed-care pharmacy benefit managers to pass through what the pharmacy is paid, plus a fixed administrative fee. This piece was dropped from the PBM reforms enacted February 3, 2026.</dd>
+      <dt>Amends</dt><dd>Social Security Act title XIX (subsection to confirm).</dd>
+      <dt>Estimate</dt><dd>About −$1.1B. Proxy: CBO's score of H.R. 5378 §202 (2023).</dd>
+    </dl></div></details>
+    <details id="sec-302"><summary><span class="s">Sec. 302</span>Protect the drug negotiation schedule</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Makes no change to the Medicare Drug Price Negotiation Program (10 drugs in 2026, 15 in 2027, 15 in 2028, then up to 20 a year), and asks GAO to report on the 2025 law's widened orphan-drug exclusion.</dd>
+      <dt>Estimate</dt><dd>None.</dd>
+    </dl></div></details>
+
+    <div class="titlehead">Title IV · Workforce</div>
+    <details id="sec-401"><summary><span class="s">Sec. 401</span>14,000 new residency positions</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Adds 14,000 Medicare-funded graduate medical education positions over seven years, prioritising rural, underserved and primary-care programmes, following the Resident Physician Shortage Reduction Act.</dd>
+      <dt>Amends</dt><dd>Social Security Act §1886(h) and §1886(d)(5)(B).</dd>
+      <dt>Estimate</dt><dd>About +$25.2B (rough, not scored): CMS's estimate of $1.8B per 1,000 positions over ten years, scaled by us.</dd>
+    </dl></div></details>
+
+    <div class="titlehead">Title V · Accountability</div>
+    <details id="sec-501"><summary><span class="s">Sec. 501</span>Public reporting</summary><div class="text"><dl>
+      <dt>Does</dt><dd>HHS publishes an annual report and public dashboard on coverage by state, age and income; prices; premiums; and the effects of the 2025 Medicaid work requirements and eligibility checks.</dd>
+    </dl></div></details>
+    <details id="sec-502"><summary><span class="s">Sec. 502</span>Pay-as-you-go safeguard</summary><div class="text"><dl>
+      <dt>Does</dt><dd>Sections 101 and 401 take effect only if CBO certifies that Titles II and III, as enacted, offset them over ten years. If not, Section 101 is shortened to two years. Replaces the original's demand for "dynamic scoring"; CBO sets its own methods.</dd>
+    </dl></div></details>
+  </div>
+</section>
+
+<section aria-labelledby="changed-h">
+  <h2 id="changed-h">What changed from the December 2025 version</h2>
+  <div class="tablewrap">
+  <table class="wide">
+    <thead><tr><th>Original section</th><th>Now</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Automatic and year-round enrolment</td><td><span class="pill scaled">Scaled back</span> Sec. 103</td><td>Unscored; year-round enrolment invites adverse selection. A demonstration can be tested.</td></tr>
+      <tr><td>95% Medicaid match, $500M rural fund</td><td><span class="pill scaled">Scaled back</span> Sec. 102</td><td>Restores the scored ARPA incentive. The 2025 law already created a $50B rural fund.</td></tr>
+      <tr><td>50 drugs by 2028, reference pricing</td><td><span class="pill further">Going further</span></td><td>Current law already reaches about 40 drugs by 2028.</td></tr>
+      <tr><td>Ground ambulance surprise billing</td><td><span class="pill kept">Kept</span> Sec. 203</td><td>Bipartisan advisory-committee recommendation.</td></tr>
+      <tr><td>Hospital price transparency</td><td><span class="pill kept">Kept</span> Sec. 201</td><td>Now a 45–0 committee bill.</td></tr>
+      <tr><td>Medicare Part E public option</td><td><span class="pill further">Going further</span></td><td>Not bipartisan; no current score.</td></tr>
+      <tr><td>Medicare at 60</td><td><span class="pill further">Going further</span></td><td>Not bipartisan; the "5–7 million newly insured" was unsourced.</td></tr>
+      <tr><td>Permanent subsidies to 600% of poverty</td><td><span class="pill scaled">Scaled back</span> Sec. 101</td><td>Permanent extension costs $349.8B (CBO); three years is what the House passed.</td></tr>
+      <tr><td>Negotiate all Part D drugs</td><td><span class="pill further">Going further</span></td><td>Large structural change; not scored here.</td></tr>
+      <tr><td>$2,000 out-of-pocket cap on all plans</td><td><span class="pill further">Going further</span></td><td>Part D already has a $2,000 cap; an all-plan cap is unscored.</td></tr>
+      <tr><td>Individual mandate</td><td><span class="pill dropped">Dropped</span></td><td>Unpopular; the federal penalty was set to zero in 2017.</td></tr>
+      <tr><td>Swiss-style Basic Health Plan</td><td><span class="pill dropped">Dropped</span></td><td>ACA essential health benefits already exist; the KVG citation was wrong.</td></tr>
+      <tr><td>All-payer price controls</td><td><span class="pill further">Going further</span></td><td>Site-neutral payment (Sec. 202) is the Medicare-side version. The SGB V §72 citation was wrong.</td></tr>
+      <tr><td>New subsidy schedule with 10% state share</td><td><span class="pill dropped">Dropped</span></td><td>Duplicates Sec. 101 and shifts cost to states.</td></tr>
+      <tr><td>Administrative simplification ($200–250B a year)</td><td><span class="pill dropped">Dropped</span></td><td>The savings figure was unsourced and counted private savings as federal. Sec. 201's reporting covers part of it.</td></tr>
+      <tr><td>$100,000 loan forgiveness for every physician</td><td><span class="pill dropped">Dropped</span></td><td>Unscored and untargeted.</td></tr>
+      <tr><td>Medical school expansion, free-tuition corps</td><td><span class="pill scaled">Replaced</span> Sec. 401</td><td>Residency positions are the real bottleneck.</td></tr>
+      <tr><td>Malpractice caps and "German health courts"</td><td><span class="pill dropped">Dropped</span></td><td>Germany uses medical arbitration boards, not health courts.</td></tr>
+      <tr><td>Revenue: 39.6% rate, carried interest, 3% surtax, "employer payroll redirection"</td><td><span class="pill further">Going further</span></td><td>Carried interest was credited with $18B a year; CBO puts it at about $1.3B. The payroll redirection was never actually created.</td></tr>
+      <tr><td>"$200–400 billion a year deficit reduction"</td><td><span class="pill dropped">Withdrawn</span></td><td>The arithmetic did not add up.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="further-h">
+  <h2 id="further-h">Going further: what more would cost, and how it could be paid for</h2>
+  <p style="max-width:75ch">The core bill is deliberately modest. Universal coverage on the Swiss or German model would take much more. These options are not in the bill; they are here so readers can see the price of ambition honestly.</p>
+  <div class="sides">
+    <div class="side">
+      <h3>Additional revenue (10 years)</h3>
+      <div class="tablewrap" style="border:0">
+      <table>
+        <tbody>
+          <tr><td>Cap the employer health-insurance tax exclusion at the 75th percentile of premiums</td><td class="r">$521B</td></tr>
+          <tr><td>Extend the 3.8% net investment income tax to active business income</td><td class="r">$420B</td></tr>
+          <tr><td>Restore the 39.6% top income-tax rate at the pre-2018 bracket</td><td class="r">$402B</td></tr>
+          <tr><td>Raise the additional Medicare tax on high earners from 0.9% to 2.1%</td><td class="r">$258B</td></tr>
+          <tr><td>Tax carried interest as ordinary income (CBO; newer models up to about $100B)</td><td class="r">$13B</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Bigger reforms (10 years)</h3>
+      <div class="tablewrap" style="border:0">
+      <table>
+        <tbody>
+          <tr><td>Make the enhanced subsidies permanent</td><td class="r">$350B</td></tr>
+          <tr><td>Medicare Advantage coding reform (a saving)</td><td class="r pos">−$155–200B</td></tr>
+          <tr><td>Medicare Part E public option</td><td class="r">not yet priced</td></tr>
+          <tr><td>Medicare at 60</td><td class="r">not yet priced</td></tr>
+          <tr><td>$2,000 out-of-pocket cap on all plans</td><td class="r">not yet priced</td></tr>
+          <tr><td>All-payer rate setting; negotiating all drugs</td><td class="r">not yet priced</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="models-h">
+  <h2 id="models-h">The foreign models, correctly cited</h2>
+  <div class="sides">
+    <div class="side">
+      <h3>Switzerland · KVG/LAMal (in force 1996)</h3>
+      <ul>
+        <li>Art. 3: compulsory health insurance</li>
+        <li>Arts. 24–33: the benefits covered, and the test that care be effective, appropriate and economical</li>
+        <li>Art. 61: how premiums are set</li>
+        <li>Art. 65: cantonal premium reductions for lower-income residents, with a federal contribution under Art. 66</li>
+      </ul>
+    </div>
+    <div class="side">
+      <h3>Germany · Social Code Book V</h3>
+      <ul>
+        <li>§87: the uniform fee schedule for doctors (EBM)</li>
+        <li>§35a: early benefit assessment of new drugs</li>
+        <li>§130b: negotiated reimbursement amounts for new drugs</li>
+        <li>§72, cited in the original, concerns securing physician supply, not prices</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note" style="margin-top:12px">Swiss and German article numbers checked October 12, 2026. These laws are models to adapt, not text to copy.</p>
+</section>
+
+<section aria-labelledby="champ-h">
+  <h2 id="champ-h">Members who have championed these ideas</h2>
+  <p style="max-width:75ch">None of these members has endorsed this bill. Each has publicly supported one of its components.</p>
+  <ul style="max-width:75ch;display:grid;gap:6px;padding-left:18px">
+    <li><strong>Premium tax credits:</strong> Sens. Lisa Blunt Rochester, Ron Wyden and Maria Cantwell; Sen. Bernie Moreno joined bipartisan talks on a two-year version. Reps. Brian Fitzpatrick, Mike Lawler, Ryan Mackenzie and Rob Bresnahan Jr. signed the discharge petition.</li>
+    <li><strong>Price transparency:</strong> Reps. Brett Guthrie and Frank Pallone.</li>
+    <li><strong>Site-neutral payment:</strong> Sens. Bill Cassidy (leaving the Senate in January 2027) and Maggie Hassan.</li>
+    <li><strong>Residency positions:</strong> Sens. Raphael Warnock and John Boozman; Reps. Terri Sewell and Brian Fitzpatrick.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="src-h">
+  <h2 id="src-h">Sources for the estimates</h2>
+  <div class="sources">
+    <p>Congressional Budget Office, cost estimate for <a href="https://www.cbo.gov/system/files/2026-01/hr1834_0.pdf">H.R. 1834, extension of enhanced premium tax credits</a>, January 8, 2026.</p>
+    <p>Congressional Budget Office, letter on <a href="https://www.cbo.gov/system/files/2025-09/61734-Health.pdf">making the enhanced premium tax credits permanent</a>, September 18, 2025.</p>
+    <p>Congressional Budget Office, <a href="https://www.cbo.gov/budget-options/60908">"Reduce Payments for Hospital Outpatient Departments"</a>, Options for Reducing the Deficit, December 12, 2024.</p>
+    <p>Congressional Budget Office, <a href="https://www.cbo.gov/system/files/2023-12/hr5378-DS-and-Revs_12-2023.pdf">estimate for H.R. 5378, Lower Costs, More Transparency Act</a>, December 8, 2023.</p>
+    <p>KFF, <a href="https://www.kff.org/medicaid/health-provisions-in-the-2025-federal-budget-reconciliation-law/">"Health Provisions in the 2025 Federal Budget Reconciliation Law"</a>, August 22, 2025.</p>
+    <p>KFF, <a href="https://www.kff.org/other-health/what-to-know-about-pharmacy-benefit-managers-pbms-and-federal-efforts-at-regulation/">"What to Know About Pharmacy Benefit Managers (PBMs) and Federal Efforts at Regulation"</a>, February 9, 2026.</p>
+    <p>CMS, <a href="https://cms.gov/newsroom/press-releases/cms-funding-1000-new-residency-slots-hospitals-serving-rural-underserved-communities">"CMS funding 1,000 new residency slots for hospitals serving rural &amp; underserved communities"</a>, December 17, 2021.</p>
+    <p>Congressional Budget Office, budget options on <a href="https://www.cbo.gov/budget-options/60946">carried interest</a>, <a href="https://www.cbo.gov/budget-options/60945">the net investment income tax</a> and <a href="https://www.cbo.gov/budget-options/60953">the employer exclusion</a>, December 12, 2024.</p>
+    <p>Penn Wharton Budget Model, <a href="https://budgetmodel.wharton.upenn.edu/p/2025-05-05-raising-top-ordinary-rates-options-for-reform-under-tcja-extension/">"Raising Top Ordinary Rates: Options under TCJA Extension"</a>, May 2025.</p>
+    <p>Committee for a Responsible Federal Budget, <a href="https://www.crfb.org/blogs/cbos-medicare-savings-options">"CBO's Medicare Savings Options"</a>, January 16, 2025.</p>
+  </div>
+</section>
+
+<footer>
+  Part of <strong>Code Blue: America's 80-Year Failure to Solve Healthcare</strong>, by Stephen Gordon at <a href="https://canadiansnowmansays.substack.com">canadiansnowmansays.substack.com</a>. A neighbour's draft by a Canadian observer, offered for public discussion. It has not been drafted or reviewed by legislative counsel, and its estimates are not an official score.
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var all = document.querySelectorAll('.bill details');
+  document.getElementById('openAll').addEventListener('click', function(){ all.forEach(function(d){ d.open = true; }); });
+  document.getElementById('closeAll').addEventListener('click', function(){ all.forEach(function(d){ d.open = false; }); });
+  var h = location.hash.slice(1);
+  if (h) { var t = document.getElementById(h); if (t && t.tagName === 'DETAILS') { t.open = true; t.scrollIntoView(); } }
+})();
+</script>
+
+</body></html>

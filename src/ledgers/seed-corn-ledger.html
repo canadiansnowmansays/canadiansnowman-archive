@@ -1,0 +1,527 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Seed Corn Ledger</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a grant-ledger register. Summary vitals up top, then tabbed registers keyed to the three columns: dividend (what it bought), strain (what's breaking), gain (who's harvesting). */
+:root{
+  --paper:#f1f4f1; --surface:#fbfcfa; --ink:#15232a; --muted:#56676b; --rule:#cdd7d4;
+  --dividend:#1d6a5a; --strain:#b0502a; --gain:#38589a; --flag:#8a6a12;
+  --dividend-bg:#e3efeb; --strain-bg:#f6e6de; --gain-bg:#e3e9f5; --flag-bg:#f3ecd6;
+  --display:"Newsreader", "Iowan Old Style", Georgia, serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0f1619; --surface:#152024; --ink:#e2eae7; --muted:#93a3a5; --rule:#2a393d;
+  --dividend:#62c2a9; --strain:#e58c60; --gain:#8eaaea; --flag:#d9b54e;
+  --dividend-bg:#16302a; --strain-bg:#35211a; --gain-bg:#1b2540; --flag-bg:#2f2814; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0f1619; --surface:#152024; --ink:#e2eae7; --muted:#93a3a5; --rule:#2a393d;
+  --dividend:#62c2a9; --strain:#e58c60; --gain:#8eaaea; --flag:#d9b54e;
+  --dividend-bg:#16302a; --strain-bg:#35211a; --gain-bg:#1b2540; --flag-bg:#2f2814; color-scheme:dark}
+
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:28px 56px}
+a{color:var(--gain)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--gain);outline-offset:2px}
+
+header.mast{display:grid;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:18px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,6vw,58px);line-height:1.02;margin:0;text-wrap:balance}
+.dek{font-family:var(--display);font-size:clamp(17px,2.2vw,21px);max-width:62ch;margin:0}
+.dek em{color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.key{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:3px}
+.k-div{background:var(--dividend-bg);color:var(--dividend)}
+.k-str{background:var(--strain-bg);color:var(--strain)}
+.k-gain{background:var(--gain-bg);color:var(--gain)}
+.k-flag{background:var(--flag-bg);color:var(--flag)}
+
+h2{font-family:var(--display);font-size:26px;margin:0;text-wrap:balance}
+h3.sub{font-family:var(--display);font-size:21px;margin:10px 0 0}
+.section-intro{max-width:70ch;color:var(--muted);margin:4px 0 0}
+
+.vitals{margin-top:24px;display:grid;gap:12px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.v{background:var(--surface);padding:14px 14px 12px;display:grid;gap:4px;align-content:start;min-width:0}
+.v .num{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
+.v .lab{font-size:13px}
+.v .src{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.v.str .num{color:var(--strain)} .v.gain .num{color:var(--gain)}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top, 0px);z-index:5;background:var(--paper);margin-top:30px;border-bottom:1px solid var(--rule);overflow-x:auto}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--paper)}
+nav.tabs .row{display:flex;gap:2px;min-width:max-content}
+nav.tabs a{font-family:var(--mono);font-size:13px;text-decoration:none;color:var(--muted);padding:12px 12px 10px;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ink)}
+nav.tabs a:hover{color:var(--ink)}
+.panel{padding-top:22px;display:grid;gap:18px}
+
+.lineage{display:grid;grid-template-columns:1.3fr 1fr 1fr;border:1px solid var(--rule);background:var(--surface)}
+.lineage .col{padding:14px 16px;display:grid;gap:8px;align-content:start;min-width:0;border-left:1px solid var(--rule)}
+.lineage .col:first-child{border-left:0}
+.lineage .tag{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+.c-div .tag{color:var(--dividend)} .c-str .tag{color:var(--strain)} .c-gain .tag{color:var(--gain)}
+.c-div{box-shadow:inset 0 3px 0 var(--dividend)} .c-str{box-shadow:inset 0 3px 0 var(--strain)} .c-gain{box-shadow:inset 0 3px 0 var(--gain)}
+.lineage h4{font-family:var(--display);font-size:17px;margin:0;line-height:1.25}
+.lineage p{margin:0;font-size:14px}
+.lineage .fine{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.dv{display:grid;gap:2px;padding-bottom:8px;border-bottom:1px dashed var(--rule)}
+.dv:last-child{border-bottom:0;padding-bottom:0}
+.dv .yrs{font-family:var(--mono);font-size:12px;color:var(--dividend);font-variant-numeric:tabular-nums}
+.lin-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0 0 6px}
+.lin-head .name{font-family:var(--display);font-size:24px;font-weight:600}
+.lin-head .essay{font-family:var(--mono);font-size:12px;color:var(--muted)}
+@media (max-width:760px){.lineage{grid-template-columns:1fr}.lineage .col{border-left:0;border-top:1px solid var(--rule)}.lineage .col:first-child{border-top:0}}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters button{font-family:var(--mono);font-size:12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);padding:6px 10px;border-radius:3px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th{font-family:var(--mono);font-weight:500;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;text-align:left;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--rule);background:var(--paper)}
+td{padding:11px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td .what{font-weight:600}
+td .note{color:var(--muted);font-size:13px;margin-top:2px}
+.num-cell{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.ch-doge{background:var(--strain-bg);color:var(--strain)}
+.ch-uni{background:var(--gain-bg);color:var(--gain)}
+.ch-vought{background:var(--flag-bg);color:var(--flag)}
+.ch-talent{background:var(--dividend-bg);color:var(--dividend)}
+.ss{font-family:var(--mono);font-size:10.5px;color:var(--flag);border:1px solid var(--flag);border-radius:3px;padding:0 4px;margin-left:4px;white-space:nowrap}
+.st{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+.st::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--muted)}
+.st-live::before{background:var(--strain)}
+.st-term::before{background:var(--strain);border-radius:0}
+.st-rest::before{background:var(--flag)}
+.st-prop::before{background:transparent;box-shadow:inset 0 0 0 2px var(--flag)}
+.st-watch::before{background:transparent;box-shadow:inset 0 0 0 2px var(--muted)}
+.st-pend::before{background:var(--gain)}
+.st-cont::before{background:var(--strain);border-radius:0;transform:rotate(45deg)}
+.st-court::before{background:var(--gain);border-radius:0}
+.st-done::before{background:var(--dividend)}
+.st-part::before{background:linear-gradient(90deg,var(--dividend) 50%,var(--strain) 50%)}
+
+.dest{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.dcard{background:var(--surface);border:1px solid var(--rule);padding:14px 16px;display:grid;gap:8px;align-content:start;min-width:0}
+.dcard h3{font-family:var(--display);font-size:20px;margin:0}
+.dcard ul{margin:0;padding-left:18px;display:grid;gap:5px;font-size:14px}
+.dcard .who{font-family:var(--mono);font-size:12px;color:var(--gain)}
+.callout{border-left:3px solid var(--flag);background:var(--flag-bg);padding:12px 14px;font-size:14px;max-width:80ch}
+.callout b{color:var(--flag)}
+
+.chart{background:var(--surface);border:1px solid var(--rule);padding:12px;overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:640px;height:auto}
+.chart text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.chart .lbl{fill:var(--ink);font-family:var(--body);font-size:12.5px}
+
+.sources{display:grid;gap:14px}
+.sources h4{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:6px 0 4px}
+.sources ol{margin:0;padding-left:20px;display:grid;gap:5px;font-size:14px;max-width:90ch}
+.sources .o{font-family:var(--mono);font-size:12px;color:var(--muted)}
+footer{margin-top:40px;border-top:1px solid var(--rule);padding-top:14px;font-family:var(--mono);font-size:12px;color:var(--muted);display:grid;gap:4px}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">The Endless Frontier · companion ledger</div>
+    <h1>The Seed Corn Ledger</h1>
+    <p class="dek">What eighty years of federally funded American science bought, what is under strain now, and who is harvesting what the United States planted. <em>Science is the long game, as Marcia McNutt put it.</em></p>
+    <div class="meta"><span>Updated 21 Nov 2026</span><span>Base source: <a href="https://www.nytimes.com/2026/10/31/climate/how-trump-is-dismantling-americas-scientific-research-machine.html" target="_blank" rel="noopener">The New York Times, 31 Oct 2026</a>, first of its "Science Under Siege" series</span><span>Updated weekly</span></div>
+    <div class="legend" aria-label="Column key">
+      <span class="key k-div">Dividend: what it bought</span>
+      <span class="key k-str">Strain: what is breaking</span>
+      <span class="key k-gain">Gain: who is harvesting</span>
+    </div>
+  </header>
+
+  <section class="vitals" aria-labelledby="vh">
+    <h2 id="vh">Vital signs</h2>
+    <p class="section-intro">The first tile is the administration's strongest rebuttal and stays at the top on purpose: Congress kept budgets roughly level. Everything after it is what happened underneath.</p>
+    <div class="vgrid" id="vgrid"></div>
+  </section>
+
+  <nav class="tabs" aria-label="Ledger sections"><div class="row" id="tabrow"></div></nav>
+
+  <section class="panel" id="p-lineages" data-view="lineages">
+    <div><h2>Lineages</h2><p class="section-intro">Four themed lineages, each followed in one or two essays of The Endless Frontier. The dividend column groups related payoffs; the strain and gain columns show what has happened to the system that produced them.</p></div>
+    <div id="lineages" style="display:grid;gap:26px"></div>
+  </section>
+
+  <section class="panel" id="p-strain" data-view="strain" hidden>
+    <div><h2>Strain register</h2><p class="section-intro">Every recorded cut, freeze, ruling or rule change, tagged by which pillar of the strategy caused it. Restored is never the same as unharmed: the time-lost column says why.</p></div>
+    <div class="filters" id="filters" role="group" aria-label="Filter by mechanism"></div>
+    <div class="tablewrap"><table><thead><tr><th>Entry</th><th>Mechanism</th><th>Scale</th><th>Status</th><th>Time lost</th></tr></thead><tbody id="strainBody"></tbody></table></div>
+    <h3 class="sub">University settlements</h3>
+    <div class="tablewrap"><table><thead><tr><th>University</th><th>Terms</th><th>Date</th><th>Funding at stake or restored</th></tr></thead><tbody id="settleBody"></tbody></table></div>
+  </section>
+
+  <section class="panel" id="p-exodus" data-view="exodus" hidden>
+    <div><h2>Where they went</h2><p class="section-intro">The gain column: programmes recruiting researchers leaving the United States, with named recruits where the reporting gives them.</p></div>
+    <div class="callout"><b>The Times's Canada line, reconciled.</b> Ottawa's official $1.7 billion programme targets more than 1,000 researchers over 12 years; the $1 billion figure is only its research-chairs strand, which funds about 100 chairs. The Times attached one number to the other. Separately, some outlets call the package $1.2 billion; no official source supports that.</div>
+    <div class="dest" id="dest"></div>
+    <div class="callout"><b>No one has a reliable count of scientists who have left the United States.</b> The 10,109 figure counts STEM PhDs who left federal jobs, not the country. The closest real departure data: physics PhD graduates leaving the US at the highest rate in 30 years, 13% of surveyed NIH-funded researchers saying they lost lab staff to other countries, and a survey showing young biomedical researchers' plans to stay in the US falling from 93% to 72% in six months. In a 2025 Nature poll of 1,600 US-based scientists, 75% said they were considering leaving.</div>
+  </section>
+
+  <section class="panel" id="p-gap" data-view="gap" hidden>
+    <div><h2>The Vought Gap</h2><p class="section-intro">What the White House asked for, what Congress gave, and what is actually reaching researchers. Congress refused the deep cuts for fiscal 2026. The gap opens in the last column.</p></div>
+    <div class="tablewrap"><table><thead><tr><th>Agency</th><th>FY26 request</th><th>FY26 enacted</th><th>What is actually happening</th><th>FY27 request</th></tr></thead><tbody id="gapBody"></tbody></table></div>
+    <div class="callout"><b>Status:</b> No fiscal 2027 science bills have passed. A stopgap law signed 2 Sep 2026 holds fiscal 2026 levels until 11 Dec 2026, and it also bars the White House from finalising its grant-rule overhaul before then. <b>After the 3 Nov midterms:</b> Democrats won control of both chambers from January: at least 54 Senate seats, and a large House majority (CNN projects over 250 seats). In Maine, Susan Collins, chair of Senate Appropriations, conceded to Troy Jackson on 3 Nov. The outgoing Congress returns 9 Nov and must pass funding before the stopgap expires; the grant-rule block lapses with it unless renewed. <b>First Senate FY27 science bill:</b> on 12 Nov Senate appropriators released their Commerce-Justice-Science bill, giving NASA science $7.43B, against $7.25B enacted for FY26, $6.0B in the House committee bill and $3.89B requested. It has not had a committee vote.</div>
+  </section>
+
+  <section class="panel" id="p-horizon" data-view="horizon" hidden>
+    <div><h2>Payoff horizon</h2><p class="section-intro">How long past federal research took to pay off, and when today's cut work would have paid off on the same clock. Wartime urgency squeezed ENIAC to three years. In peacetime the lags below run from 13 to 46 years, typically about 25, which puts today's missing payoffs between roughly 2038 and 2071.</p></div>
+    <div class="chart" id="chart"></div>
+  </section>
+
+  <section class="panel" id="p-promises" data-view="promises" hidden>
+    <div><h2>Promise tracker</h2><p class="section-intro">Official claims logged against what the record shows. Each one gets revisited as evidence comes in.</p></div>
+    <div class="tablewrap"><table><thead><tr><th>Claim</th><th>Who, when</th><th>What the record shows</th><th>Status</th></tr></thead><tbody id="promBody"></tbody></table></div>
+  </section>
+
+  <section class="panel" id="p-sources" data-view="sources" hidden>
+    <div><h2>Sources</h2><p class="section-intro">Every figure in this ledger was checked against at least two independent sources wherever two exist. Where reputable sources disagree, the ledger gives the range.</p></div>
+    <div class="sources"><div id="srcList"></div></div>
+  </section>
+
+  <footer>
+    <span>Companion to The Endless Frontier, on CanadianSnowmanSays.</span>
+  </footer>
+</div>
+
+<script>
+const SS='';
+const vitals=[
+ {n:"~level",l:"FY2026 science budgets as enacted by Congress: NIH about +1%, NSF −3%, NASA science −1%, DOE Science +2%. Total federal research spending is about $200B a year, roughly what earlier administrations spent",s:"CRS; AAS; NYT",c:""},
+ {n:"−12%",l:"NIH awards over two years: 56,600 in FY26 vs about 64,000 in FY24, though NIH spent its full budget",s:"AAMC; STAT",c:"str"},
+ {n:"$1.4B",l:"NSF research money left unspent in FY26, against under $175M in prior years",s:"NYT 2 Oct; AIP (>$1B)",c:"str"},
+ {n:"5,776",l:"NIH grants frozen or terminated since Jan 2025; 1,161 still terminated",s:"AAMC; Becker's",c:"str"},
+ {n:"~95,000",l:"Staff lost across federal science agencies, Sep 2024 to Dec 2025 (11.9%)",s:"Partnership for Public Service; E&E",c:"str"},
+ {n:"10,109",l:"STEM PhDs who left federal jobs in 2025, about 14% of that workforce",s:"Science; FlowingData",c:"str"},
+ {n:"−21%",l:"International PhD applications at 55 AAU universities, fall 2026",s:"AAU; Becker's",c:"str"},
+ {n:"48 of 64",l:"First Goldenberg Chairs in Canada recruited from US institutions",s:"NYT; PIE News",c:"gain"},
+ {n:"116→169",l:"US-based applicants for ERC Starting Grants, 2025 to 2026",s:"DUB; Eunews",c:"gain"},
+ {n:"29 of 34",l:"Netherlands Tulip Fund recruits who came from or worked in the US",s:"EURAXESS; DUB",c:"gain"},
+ {n:"93%→72%",l:"Young US biomedical researchers likely to stay in the US, in just six months",s:"NBER; Harvard Gazette",c:"str"},
+ {n:"2×",l:"China's share of high-quality research output vs the US (Nature Index 2026)",s:"Nature Index; Research Information",c:"gain"}
+];
+document.getElementById("vgrid").innerHTML=vitals.map(v=>`<div class="v ${v.c}"><div class="num">${v.n}</div><div class="lab">${v.l}</div><div class="src">${v.s}</div></div>`).join("");
+
+const lineages=[
+ {name:"The Machine",essay:"Computing and AI · Parts II and III",
+  divs:[
+   {h:"ENIAC → UNIVAC",y:"1943 → 1946 → 1951",p:"Army Ordnance contracted Penn's Moore School in June 1943 for a machine to compute artillery firing tables. ENIAC was dedicated in February 1946, programmed by six women from the Army's human-computer teams. Its designers built UNIVAC I, delivered to the Census Bureau in 1951.",f:"US Army Ordnance; Census Bureau · Army Research Lab, Smithsonian, Penn, Census"},
+   {h:"The computer mouse",y:"1964 → 1968",p:"Built at SRI for Douglas Engelbart's group and shown in the 1968 'Mother of All Demos'.",f:"ARPA, NASA and the Air Force · DARPA, Stanford, Computer History Museum"},
+   {h:"Maser → laser",y:"1954 → 1960",p:"Charles Townes's maser at Columbia had military research funding. The first working laser, in 1960, was built at Hughes with company money: the federal claim covers the maser, not the laser.",f:"Joint Services Electronics Program, Air Force · Columbia, AFOSR, HRL"},
+   {h:"Neural networks → modern AI",y:"1985–86 → 2012 → 2024 Nobel",p:"Rumelhart, Hinton and Williams's backpropagation work was funded partly by the Office of Naval Research. It led to the 2012 AlexNet breakthrough and Hinton's 2024 Nobel Prize.",f:"Office of Naval Research · UCSD report, Computer History Museum, Smithsonian"},
+   {h:"Siri",y:"2003 → 2011",p:"Grew out of SRI's CALO project inside DARPA's $150 million Personal Assistant That Learns programme. Apple bought the spin-off in 2010 and launched Siri in 2011.",f:"DARPA · DARPA, SRI"}
+  ],
+  s:{h:"Defence research and university contracts",p:"The Pentagon's own Defense Research Enterprise Review found its science and technology labs lost about 14% of their workforce. Randall Engle's Navy-funded testing at Georgia Tech was cancelled mid-work; he believes for being at a university. The Energy Department, home of the Genesis AI science effort, lost about a quarter of its staff.",f:"DOGE, DoD funding changes · NYT, DefenseScoop"+SS},
+  g:{h:"Berkeley to Tsinghua",p:"Omar Yaghi, 2025 Nobel laureate in chemistry, left Berkeley in July 2026 to lead Tsinghua's new institute for AI, chemistry and materials, two fields the administration says it wants to dominate.",f:"China · Tsinghua, NYT, Times Higher Education"}},
+ {name:"The Network",essay:"The internet · Part V",
+  divs:[
+   {h:"ARPANET → NSFNET → the internet",y:"1969 → 1986 → 1995",p:"DARPA's ARPANET sent its first message from UCLA to SRI in October 1969. NSF's NSFNET backbone followed and was retired in April 1995, handing the internet to commercial carriers.",f:"DARPA, then NSF · DARPA, SRI, NSF, FedTech"},
+   {h:"Mosaic, the first popular browser",y:"1993",p:"Written at NSF's National Center for Supercomputing Applications at Illinois. It passed a million users within 18 months. The High-Performance Computing Act of 1991 gave NSF charge of the research network.",f:"NSF · NSF, NCSA, Public Law 102-194"},
+   {h:"Google",y:"1994 → 1998",p:"Page and Brin built the search work behind PageRank inside Stanford's Digital Library project, one of the first six awards of NSF's multi-agency Digital Library Initiative.",f:"NSF-led initiative · NSF, Stanford Magazine"}
+  ],
+  s:{h:"NSF, the internet's second funder",p:"NSF made 6,218 awards in FY26 against 10,937 two years earlier, and left about $1.4 billion unspent. Around $1 billion was held back for a White House science-office initiative. Its staff fell by a quarter to a third. Jessica Rosenberg's quantum-careers grant was cancelled four months in. Its acting director, Brian Stone, leaves at the end of 2026, and on 18 Nov 2026 the Senate health committee's chairman refused to take up its nominee for director, Jim O'Neill.",f:"Vought, DOGE · NYT, AIP"+SS+", Nature"},
+  g:{h:"Europe's research councils",p:"US-based applicants to the European Research Council rose across all three grant types: Starting 116 → 169, Consolidator 19 → 64, Advanced 23 → 114. Twenty of 21 non-European Starting Grant winners in 2026 were based in the US.",f:"EU · DUB, Science|Business, Times Higher Education"}},
+ {name:"The Body",essay:"Medicine · Parts VII and VIII",
+  divs:[
+   {h:"Oncogenes → Gleevec",y:"1976 → 1989 Nobel → 2001",p:"A 1976 Nature paper by Stehelin, Varmus, Bishop and Vogt, funded by US Public Health Service grants and the National Cancer Institute, found cancer genes in normal cells. Gleevec, approved in 2001 in 72 days, transformed one leukaemia from fatal to manageable.",f:"NIH/NCI · Nature, NLM, National Cancer Institute"},
+   {h:"Human Genome Project",y:"1990 → 2003",p:"Finished more than two years early at about $2.7 billion. Battelle estimated a 141-to-1 economic return; FactCheck.org says that overstates it, and Battelle's own 2013 update gave about 66-to-1.",f:"NIH and the Energy Department · genome.gov, ORNL, FactCheck.org"},
+   {h:"MRI",y:"1971–73 → 2003 Nobel",p:"Lauterbur's 1973 imaging paper and Damadian's earlier tissue work led to clinical MRI. NSF says the work was partly NSF-funded; no named NIH grant was found.",f:"NSF (partial) · NSF, Physics Today, IEEE"},
+   {h:"mRNA vaccines",y:"2005 → 2020 → 2023 Nobel",p:"Karikó and Weissman's NIH-funded 2005 discovery, and the NIH Vaccine Research Center's spike-protein work, underpinned the 2020 COVID vaccines.",f:"NIH · NIH, NIH Record, MedlinePlus"}
+  ],
+  s:{h:"NIH: full budget, fewer grants",p:"Congress held NIH roughly level, and NIH spent it, but on about 7,500 fewer awards over two years because it paid multiyear grants up front. GAO ruled NIH broke impoundment law in 2025 by slowing nearly $8 billion. Ann Cohen's Alzheimer's study was terminated in August. The National Cancer Institute closed the 27-year Pediatric Brain Tumor Consortium in 2025, pausing a CAR-T trial for children's brain tumours: the therapy that transformed the most common childhood leukaemia.",f:"DOGE, Vought · AAMC, STAT, GAO, NYT, Fierce Biotech, PBS"},
+  g:{h:"RNA science and nutrition to Canada",p:"Phil Zamore (UMass Chan RNA Therapeutics Institute) moved to McGill; Peter Caravan (Harvard Medical School) to UBC; Kevin Hall, who left NIH in 2025, to Ottawa. A survey found 13% of NIH-funded researchers lost lab staff to other countries.",f:"Canada · McGill, WBUR, Canadian Press, ITIF"+SS}},
+ {name:"The Sky",essay:"Time, weather and space · Part X",
+  divs:[
+   {h:"Atomic clocks → GPS",y:"1948–49 → 1995",p:"The National Bureau of Standards' ammonia clock first ran in August 1948 and was announced in January 1949. The Air Force declared GPS fully operational in April 1995. The line is descent, not the same device: GPS satellites use later cesium and rubidium clocks.",f:"NBS, then US Air Force · NIST, IEEE, GPS World, Air Force"},
+   {h:"Weather satellites",y:"1960 → today",p:"NASA launched TIROS-1 in April 1960. A five-day forecast today is about as accurate as a one-day forecast was in 1980.",f:"NASA, NOAA · NOAA, NASA, UW-Madison"},
+   {h:"NCAR",y:"1960 → today",p:"The National Center for Atmospheric Research in Boulder, Colorado, built with National Science Foundation money since 1960, is one of the world's leading weather and climate laboratories: the research that turns satellite pictures into forecasts.",f:"NSF · NYT"},
+   {h:"Hubble",y:"1990 → 1998–2011",p:"Launched in April 1990 with ESA as partner. It helped pin down the age of the universe and supplied supernova data for the dark-energy discovery, which won the 2011 Nobel.",f:"NASA · NASA Science, BBC Science Focus"},
+   {h:"Gravitational waves",y:"1979 → 2015 → 2017 Nobel",p:"NSF began funding the laser-interferometer work at Caltech and MIT in 1979. LIGO made the first direct detection on 14 September 2015, and Weiss, Thorne and Barish shared the 2017 Nobel Prize.",f:"NSF · American Physical Society"}
+  ],
+  s:{h:"NASA and NOAA",p:"NASA science was held about level by Congress after a requested 47% cut, then asked to cut 47% again for FY27; the Senate's FY27 bill, released 12 Nov, would instead give it $7.43B. The budget office held 10 science missions, including the Habitable Worlds Observatory and Chandra, until NASA filed a spending plan, and NASA paused 17 science initiatives in February. NASA lost about 22% of its civil servants in 2025, including 20% of its staff with PhDs, and its chief scientist's post was eliminated; NOAA lost 16–20%. Congress gave LISA $80.5M for FY26; the FY27 request removes its budget line, and LIGO is again offered $29M, 40% below FY25. ESA has begun building replacements for NASA's LISA hardware, starting with a €26.1M telescope contract on 5 May 2026. The White House plans to dismantle NCAR; Vought has called it 'one of the largest sources of climate alarmism in the country'. A federal judge has issued a preliminary injunction blocking the plan.",f:"Vought, DOGE · AAS, Planetary Society, NASA Watch, GAO, AIP, European Spaceflight, NYT"},
+  g:{h:"Toronto's astrophysicist",p:"MIT planetary scientist Sara Seager joined the University of Toronto in September as a Distinguished Chair at $1.5 million a year. Kelly Holley-Bockelmann, former chair of NASA's Astrophysics Advisory Committee, left Vanderbilt for the Netherlands Institute for Space Research to work on LISA, taking a pay cut.",f:"Canada, Netherlands · NYT, U of T"}}
+];
+document.getElementById("lineages").innerHTML=lineages.map(L=>`<div><div class="lin-head"><span class="name">${L.name}</span><span class="essay">${L.essay}</span></div><div class="lineage">
+ <div class="col c-div"><span class="tag">Dividend</span>${L.divs.map(d=>`<div class="dv"><h4>${d.h}</h4><span class="yrs">${d.y}</span><p>${d.p}</p><span class="fine">${d.f}</span></div>`).join("")}</div>
+ <div class="col c-str"><span class="tag">Strain</span><h4>${L.s.h}</h4><p>${L.s.p}</p><span class="fine">${L.s.f}</span></div>
+ <div class="col c-gain"><span class="tag">Gain</span><h4>${L.g.h}</h4><p>${L.g.p}</p><span class="fine">${L.g.f}</span></div></div></div>`).join("");
+
+const mech={doge:["DOGE","ch-doge"],uni:["Universities","ch-uni"],vought:["Vought","ch-vought"],talent:["Talent/visas","ch-talent"]};
+const stat={live:"Ongoing",term:"Terminated",rest:"Restored, with delay",prop:"Proposed rule",watch:"Watching",pend:"Pending",cont:"Contested",court:"In court",done:"In force",part:"Partly true"};
+const strain=[
+ {w:"NIH funding slowdown ruled illegal",n:"GAO found NIH broke the Impoundment Control Act: Feb–June 2025 obligations were $12.8B against $20.6B a year earlier.",m:"vought",x:"~$7.7B slowed",s:"done",t:"Months, 2025"},
+ {w:"NIH spends its budget on fewer grants",n:"Up-front multiyear funding ($2.1B in FY25, $1.9B in FY26) cut the number of awards. The FY26 law caps it at the FY25 level.",m:"vought",x:"~7,500 fewer awards",s:"live",t:"Ongoing"},
+ {w:"NIH grant terminations",n:"5,776 grants frozen or terminated since Jan 2025; reinstated ones were disrupted for 131 days on average. HHS's own narrower count was 1,392 terminated by April 2026.",m:"doge",x:"1,161 still terminated",s:"live",t:"Avg 131 days"},
+ {w:"Running grant losses",n:"Grant Witness cumulative lost funding: NIH about $504M (Aug 2026), NSF about $768M (Oct 2026). The AP found $174–177B in federal grants of all kinds cut or frozen across every state, depending on the tracker update. In Massachusetts alone, more than 200 grants worth over $500M were never restored (Grant Witness).",m:"doge",x:"~$1.27B NIH+NSF",s:"live",t:"Ongoing"},
+ {w:"Supreme Court lets NIH cancel grants",n:"NIH v. APHA, 5–4: let NIH cancel about $783M in grants and pushed money claims to the Court of Federal Claims.",m:"doge",x:"~$783M",s:"done",t:"Permanent"},
+ {w:"Supreme Court leaves UC researchers' grants restored",n:"On 16 Nov 2026 the Supreme Court declined, with no recorded dissent, to hear the administration's appeal in Trump v. Thakur (No. 26-210). Lower courts had found the termination of University of California researchers' grants by NIH, NSF, NEH, Defense and Transportation, made under the anti-DEI executive orders, likely violated the First Amendment. More than $900M had been terminated between January and July 2025, nearly $600M of it at UCLA; almost all was restored under the lower-court orders. The case continues in the lower courts.",m:"doge",x:"~$0.9–1B",s:"court",t:"Restored for now"},
+ {w:"NSF money left unspent",n:"About $1.4B of FY26 research money not awarded; about $1B reportedly reserved for a White House science-office initiative. House Democrats say $300M was moved out of maths and physical sciences.",m:"vought",x:"$1.4B",s:"live",t:"A grant year"},
+ {w:"NSF award collapse",n:"6,218 awards in FY26 vs 10,937 in FY24; new grants at a four-decade low; astronomy awards down 57%.",m:"vought",x:"−43% in two years",s:"live",t:"Ongoing"},
+ {w:"NSF leadership vacuum",n:"No confirmed director since Sethuraman Panchanathan resigned in April 2025. Acting director Brian Stone leaves at the end of 2026; the acting chief of staff left in October; the National Science Board was dismissed in April 2026. On 18 Nov 2026, Senate health committee chair Bill Cassidy pulled nominee Jim O'Neill from a scheduled vote, citing his role in the firing of CDC director Susan Monarez. Unless confirmed by year-end, the nomination must be resent to the new, Democratic-majority Senate.",m:"doge",x:"19 months",s:"live",t:"Into 2027"},
+ {w:"Social science directorate closure",n:"NSF decided in April 2026 to close its Social, Behavioral and Economic Sciences directorate in FY27, stopped funding opportunities for basic research in those fields and reassigned almost all its staff. Researchers and scholarly societies sued on 9 Nov 2026 in federal court in Massachusetts.",m:"doge",x:"1 directorate",s:"court",t:"Pending ruling"},
+ {w:"NSF grant cancellations",n:"Counts range from about 1,300 to 1,996 depending on date and definition.",m:"doge",x:"~1,300–2,000",s:"live",t:"Varies"},
+ {w:"Federal science workforce",n:"About 95,000 staff lost across science agencies (11.9%). GAO counts about 80% of all federal departures as voluntary on paper, a third of them through buyouts. NIH about 20%, NSF a quarter to a third, NASA about 22%, NOAA and USGS 16–20%.",m:"doge",x:"~95,000",s:"live",t:"Years to rebuild"},
+ {w:"Pentagon labs lose 14% of staff",n:"From the Defense Research Enterprise Review. A Pentagon review also asked Congress for $5B over five years to rebuild deteriorating labs.",m:"doge",x:"−14%",s:"live",t:"Unknown"},
+ {w:"Energy Department",n:"Lost over 1,000 scientists and technical staff (about a quarter of all staff, NYT); grants from its two main science offices down over $500M in year one.",m:"doge",x:"~¼ of staff",s:"live",t:"Unknown"},
+ {w:"Pediatric Brain Tumor Consortium closed",n:"The National Cancer Institute did not renew the consortium's $4M-a-year grant in Aug 2025. For 27 years it linked 16 children's hospitals testing treatments for brain cancers, including D.I.P.G., which usually kills within a year of diagnosis. Eight trials were closed or paused, among them a CAR-T trial for ependymoma. Unclaimed tissue samples were destroyed; data on more than 2,000 children was archived at St Jude. NCI says paused trials will reopen in late 2026 or early 2027, and has moved the same ~$4M to a broader childhood-cancer network.",m:"doge",x:"8 trials",s:"term",t:"~15 months"},
+ {w:"Cohen Alzheimer's study, Pittsburgh",n:"Five-year NIH study of early-life stress; terminated August 2026.",m:"doge",x:"1 grant",s:"term",t:"Study ended"},
+ {w:"Rosenberg quantum-careers grant, George Mason",n:"NSF grant cancelled four months in.",m:"doge",x:"1 grant",s:"term",t:"Study ended"},
+ {w:"Shah science-reasoning study, Michigan",n:"Put on hold in 2025, later rejected.",m:"vought",x:"1 application",s:"term",t:"Never started"},
+ {w:"Engle air-traffic-controller testing, Georgia Tech",n:"Navy-funded aptitude tests cancelled mid-refinement.",m:"doge",x:"1 grant",s:"term",t:"Mid-refinement"},
+ {w:"Harvard funding freeze",n:"Judge Burroughs ruled the freeze illegal retaliation in Sept 2025 and restored about $2.7B: a $2.2B freeze in April 2025 plus $450M cut in May. The government appealed; the First Circuit heard arguments on 5 Oct 2026 and appeared sceptical of the government's argument that the case belongs in the Court of Federal Claims. No ruling yet.",m:"uni",x:"~$2.7B",s:"court",t:"Months"},
+ {w:"UNC-Chapel Hill: grants lost, total held",n:"Nearly 150 grants terminated or halted by late Sept 2025, and a list of 50+ words for researchers to avoid. Its NIH funding fell about $27M in year one versus the Biden-era average, then rose slightly above it in FY26, though with about 900 awards, some 130 fewer. Coronavirus researcher Ralph Baric was suspended from federal contracts in May 2026 and retired days later.",m:"uni",x:"~150 grants",s:"live",t:"Careers, not dollars"},
+ {w:"The compact",n:"White House offer of 1 Oct 2025: preferential research funding in exchange for commitments on admissions, hiring, international enrolment and campus speech. None of the nine universities first invited signed; UNC's chancellor said it could not sign as written.",m:"uni",x:"0 of 9 signed",s:"done",t:"—"},
+ {w:"Grant rule: political sign-off",n:"Proposed 29 May 2026 (91 FR 32198): political appointees review awards; no funding to 'promote anti-American values'. About 497,000 public comments. Blocked from finalising until 11 Dec 2026. NSF says it will not align grant decisions with the rule for now and will keep its merit review; a scientific coalition has asked NASA to rescind changes that pre-emptively follow it. In a letter to Congress, 116 organisations say NSF, NIH, NASA, DOE, Education, USDA and HUD have mirrored parts of the rule, and ask for the block to be renewed in any stopgap beyond 11 Dec.",m:"vought",x:"All agencies",s:"prop",t:"—"},
+ {w:"Executive order 14332",n:"Signed 7 Aug 2025: appointees review grants, peer review becomes advisory, grants can be terminated for convenience.",m:"vought",x:"All agencies",s:"done",t:"—"},
+ {w:"Deep budget-cut requests",n:"FY26: NIH −41%, NSF −55% to −57%, NASA science −47%; Congress refused. FY27 asks for similar cuts again.",m:"vought",x:"Two years running",s:"cont",t:"—"},
+ {w:"NCAR dismantling plan",n:"White House plan to dismantle the NSF-funded National Center for Atmospheric Research in Boulder, one of the world's leading weather and climate labs. Vought called it 'one of the largest sources of climate alarmism in the country'. A federal judge has issued a preliminary injunction. The incoming House Science chair, Zoe Lofgren, has asked agencies, companies and officials to preserve documents.",m:"vought",x:"1 national lab",s:"court",t:"Blocked for now"},
+ {w:"PhD pipeline",n:"Fall 2026 PhD admissions down 15% at AAU schools; international applications down 21% while domestic rose 3%. A Times analysis of 27 top research universities found new PhD enrolments fell from 2024 to 2025 by about 18% in engineering and 10% in science and health and in maths and computer science: about 1,600 fewer students. An NBER survey found the share of young biomedical researchers likely to stay in the US fell from 93% to 72% in six months.",m:"talent",x:"−21%",s:"live",t:"A cohort"},
+ {w:"NSF graduate fellowships",n:"The 2025 cohort was the smallest in more than a decade. Congress refused the cuts and NSF awarded a record number in spring 2026, but it now expects about 1,500 for 2027, another sharp drop, and has barred second-year graduate students from applying.",m:"talent",x:"~1,500 in 2027",s:"live",t:"A cohort"},
+ {w:"Fisk-Vanderbilt bridge",n:"For two decades it placed 85% of its students in Ph.D. programmes. No astronomy student has bridged from Fisk to Vanderbilt in two years. Its co-builder left for the Netherlands in 2026.",m:"talent",x:"0 in 2 years",s:"live",t:"A cohort"},
+ {w:"Diabetes research community",n:"The American Diabetes Association removed five scientists from its June 2026 meeting for handing out an editorial on NIH cuts, and later apologised to three. Nearly 1,200 experts are boycotting its journals and conferences; Diabetes Care editors stopped reviewing new manuscripts on 10 Sept 2026.",m:"talent",x:"~1,200 boycotting",s:"live",t:"Unresolved"},
+ {w:"International students",n:"New international enrolment fell 17.7% in 2025–26 (Open Doors); F-1 student visas issued in 2025 fell 34%. IIE's fall 2026 snapshot of 809 institutions shows new international students down a further 15%, total international enrolment down 9% and graduate students down 15%.",m:"talent",x:"−17.7%, then −15%",s:"live",t:"A cohort"}
+];
+let filter="all";
+function renderStrain(){
+ document.getElementById("filters").innerHTML=[["all","All"],...Object.entries(mech).map(([k,v])=>[k,v[0]])].map(([k,l])=>`<button type="button" id="f-${k}" data-f="${k}" aria-pressed="${filter===k}">${l}</button>`).join("");
+ document.getElementById("strainBody").innerHTML=strain.filter(r=>filter==="all"||r.m===filter).map(r=>`<tr><td><div class="what">${r.w}</div><div class="note">${r.n}</div></td><td><span class="chip ${mech[r.m][1]}">${mech[r.m][0]}</span></td><td class="num-cell">${r.x}</td><td><span class="st st-${r.s}">${stat[r.s]}</span></td><td>${r.t}</td></tr>`).join("");
+}
+document.getElementById("filters").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;filter=b.dataset.f;renderStrain();});
+renderStrain();
+
+const settle=[
+ ["Columbia","About $221M: $200M over three years plus $21M for employee claims","Jul 2025","Over $400M had been cancelled"],
+ ["Penn","No payment; Title IX terms","Jul 2025","$175M released"],
+ ["Brown","$50M over 10 years to Rhode Island workforce groups","Jul 2025","Frozen HHS grants reinstated"],
+ ["Cornell","$60M: $30M to the government, $30M for farm research","Nov 2025","Over $250M restored"],
+ ["Northwestern","$75M through 2028","Nov 2025","$790M had been withheld"],
+ ["UCLA","Administration demanded over $1B; a judge ordered about $500M restored","Aug–Sep 2025","About $500M"],
+ ["Virginia","No payment; adopted Justice Department guidance on discrimination; president Jim Ryan resigned under pressure in June 2025","Oct 2025","Remaining investigations suspended"],
+ ["UNC-Chapel Hill","No payment, no admission; closes 19 federal inquiries; Title VI complaints since 7 Oct 2023 handed over within 90 days, continued reporting","Oct 2026","Access to research funding preserved"],
+ ["Harvard","No settlement; fought in court","—","About $2.7B, on appeal (argued 5 Oct 2026)"]
+];
+document.getElementById("settleBody").innerHTML=settle.map(r=>`<tr><td><div class="what">${r[0]}</div></td><td>${r[1]}</td><td class="num-cell">${r[2]}</td><td>${r[3]}</td></tr>`).join("");
+
+const dest=[
+ {h:"Canada",items:["Canada Global Impact+ Research Talent Initiative: CAN$1.7B over 12 years, launched 9 Dec 2025, aiming for 1,000+ researchers","First 64 Eddie Goldenberg Research Chairs, 27 Aug 2026: CAN$504M over eight years, 48 from US institutions; all four Distinguished Chairs came from the US","63 Emerging Leaders: about $37M","Laval alone hired 15 US-based researchers this term"],who:"Seager (MIT → U of T) · Zamore (UMass Chan → McGill) · Caravan (Harvard Med → UBC) · Hall (NIH → Ottawa) · Zuckerman (UMass → McGill) · Sonkusale (Tufts → McGill) · Lockwood (Rutgers → McGill) · Whitehead (Carnegie Mellon → UBC) · Hyland (Columbia research assistant → McGill, turning down an NSF fellowship)"},
+ {h:"European Union",items:["Choose Europe for Science: €500M for 2025–27, announced May 2025; ERC relocation top-ups doubled to €2M","No overall count of researchers recruited yet"],who:"See ERC applicant figures in Vital signs"},
+ {h:"France",items:["Aix-Marseille Safe Place for Science: about 600 applications; 31 selected, 23 joining by Jan 2027","Choose France for Science: €100M; 46 laureates in the first wave, 41 of them from US institutions (19 are US nationals)"],who:"Alka Patel (University of California) and Kartik Sheth (NASA) to Marseille · Brian Sandberg (Illinois) to Aix-Marseille · Zhongkai Tao (Berkeley) to IHES"},
+ {h:"Netherlands",items:["Tulip Fund: €50M; 34 researchers chosen, 29 from or working in the US; up to €1M each, paid over five years","Its architect, Marcel Levi of the Dutch Research Council: 'It's a tragedy for them, but a once-in-a-lifetime opportunity for us'"],who:"Kelly Holley-Bockelmann (Vanderbilt) to SRON · Marieke Kleemans (Illinois) to Utrecht"},
+ {h:"Norway, South Korea",items:["Norway: Research Council recruitment fund","South Korea: promised a fast track to citizenship","UK additions: Faraday Discovery Fellowships and Turing AI Global Fellowships"],who:"Programme-level; from the Times's survey of more than a dozen countries"},
+ {h:"Finland",items:["Research Council of Finland recruitment initiative: five years of guaranteed funding, about US$3M for one recruit"],who:"Halley Froehlich (UC Santa Barbara) to Helsinki"},
+ {h:"Germany, UK, Spain, Austria",items:["Germany, 1,000 Köpfe Plus: €602M for 2025–29, 286 grants in year one, 20% from North America"+SS,"UK Global Talent Fund: £54M over five years","Spain ATRAE: €38.9M for 37 researchers; 21 came from US research centres, 12 are US nationals","Austria APART-USA: 25 fellows from Harvard, Princeton, MIT and others, €500K each"],who:"Christine Stawitz (NOAA) to Birmingham, UK · otherwise programme-level"},
+ {h:"Australia",items:["Global Talent Attraction Program, launched April 2025 by the Australian Academy of Science, not the government","Donor-funded; no budget and no results published yet"],who:"James Letts and Maria Maldonado (UC Davis) to Monash, route not stated"},
+ {h:"China",items:["Nature Index 2026: China's high-quality research share is about double the US's (52,735 vs 26,006); Zhejiang University displaced Harvard as the top academic institution","Leiden Ranking 2026: 8 of the 10 most productive universities are Chinese","Omar Yaghi, 2025 chemistry Nobel laureate: Berkeley → Tsinghua, July 2026","Others reported: Liu Jun (Harvard → Tsinghua), Zhang Kai (Yale → USTC), Chen Min (Purdue → Ningbo)"+SS],who:"Yaghi confirmed by four sources"}
+];
+document.getElementById("dest").innerHTML=dest.map(d=>`<div class="dcard"><h3>${d.h}</h3><ul>${d.items.map(i=>`<li>${i}</li>`).join("")}</ul><div class="who">${d.who}</div></div>`).join("");
+
+const gap=[
+ ["NIH","$27.9B (−41%)","$47.5B (+1%); $48.7B with ARPA-H","Full budget spent, but about 7,500 fewer awards over two years; GAO ruled the 2025 slowdown illegal","~$41B (−$5B); 27 institutes cut to 22"],
+ ["NSF","$3.9B (−55% to −57%)","$8.75B (−3%)","$1.4B unspent; awards down 43% in two years; ~$1B steered to a White House initiative","$3.96B (−55%)"],
+ ["NASA science","$3.9B (−47%)","$7.25B (−1%)","10 missions held until NASA filed a spending plan; 17 science initiatives paused (Feb 2026). No dollar figure published","$3.89B (−47%)"],
+ ["DOE Office of Science","$7.1B (−14%)","$8.4B (+2%)","Energy's two main science offices awarded $500M+ less in year one (NYT)","$7.14B (−13%)"],
+ ["Defense labs","Not broken out","—","Staff −14%; Pentagon review seeks $5B to rebuild labs","—"]
+];
+document.getElementById("gapBody").innerHTML=gap.map(r=>`<tr><td><div class="what">${r[0]}</div></td><td class="num-cell">${r[1]}</td><td class="num-cell">${r[2]}</td><td>${r[3]}</td><td class="num-cell">${r[4]}</td></tr>`).join("");
+
+(function(){
+ const rows=[
+  {l:"ENIAC: Army contract → dedicated (UNIVAC 1951)",a:1943,b:1946,war:true},
+  {l:"Atomic clock → GPS fully operational",a:1949,b:1995},
+  {l:"ARPANET → commercial internet",a:1969,b:1995},
+  {l:"Oncogene discovery → Gleevec approved",a:1976,b:2001},
+  {l:"Backpropagation → AlexNet",a:1986,b:2012},
+  {l:"Human Genome Project → completed",a:1990,b:2003},
+  {l:"mRNA modification → COVID vaccines",a:2005,b:2020},
+  {l:"Work cut in 2025–26 → payoffs due on the same clock",a:2025,b:2038,b2:2071,mid:2051,proj:true}
+ ];
+ const W=780,x0=20,x1=740,Y0=1940,Y1=2080,rowH=44,top=18,H=top+rows.length*rowH+34;
+ const x=y=>x0+(y-Y0)*(x1-x0)/(Y1-Y0);
+ let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Timeline of research-to-payoff lags, 1940 to 2080">`;
+ for(let y=Y0;y<=Y1;y+=20){s+=`<line x1="${x(y)}" x2="${x(y)}" y1="${top-6}" y2="${H-26}" stroke="var(--rule)" stroke-width="1"/><text x="${x(y)}" y="${H-10}" text-anchor="middle">${y}</text>`;}
+ s+=`<line x1="${x(2026)}" x2="${x(2026)}" y1="${top-6}" y2="${H-26}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/><text x="${x(2026)+5}" y="${top+2}" style="fill:var(--ink)">today</text>`;
+ rows.forEach((r,i)=>{const y=top+i*rowH+26;
+  const lx=Math.min(x(r.a),x1-340);
+  s+=`<text class="lbl" x="${lx}" y="${y-9}">${r.l}</text>`;
+  if(r.proj){
+   s+=`<rect x="${x(r.a)}" y="${y-4}" width="${x(r.b)-x(r.a)}" height="10" fill="var(--strain-bg)" stroke="var(--strain)" stroke-dasharray="4 3"/>`;
+   s+=`<rect x="${x(r.b)}" y="${y-4}" width="${x(r.b2)-x(r.b)}" height="10" fill="var(--strain)" opacity=".35"/>`;
+   s+=`<line x1="${x(r.mid)}" x2="${x(r.mid)}" y1="${y-8}" y2="${y+10}" stroke="var(--strain)" stroke-width="2"/>`;
+   s+=`<text x="${x(r.b2)+4}" y="${y+5}" style="fill:var(--strain)">2038–71</text>`;
+  } else {
+   const c=r.war?"var(--flag)":"var(--dividend)";
+   s+=`<rect x="${x(r.a)}" y="${y-4}" width="${Math.max(2,x(r.b)-x(r.a))}" height="10" fill="${c}"/>`;
+   s+=`<circle cx="${x(r.b)}" cy="${y+1}" r="5" fill="${c}"/>`;
+   s+=`<text x="${x(r.b)+9}" y="${y+5}">${r.b-r.a} yrs${r.war?" (wartime)":""}</text>`;
+  }
+ });
+ s+=`</svg>`;
+ document.getElementById("chart").innerHTML=s;
+})();
+
+const prom=[
+ ["A new golden age of American science","White House statement to the Times, Oct 2026","NIH awards −12% in two years; NSF awards −43%; ~95,000 science staff gone; fewer PhD places and graduate fellowships. Kratsios's July report, 'Science: A New Golden Age', would let individual reviewers make 'bold scientific bets' in place of traditional peer review, and barely mentions the proposed rule giving political appointees sign-off on grants","cont"],
+ ["We will harness American innovation in artificial intelligence to find cures for pediatric cancer","Robert F. Kennedy Jr., White House, Sep 2025","Announced the week after a bipartisan letter asked HHS to reverse the closure of the Pediatric Brain Tumor Consortium, while doubling a childhood-cancer data initiative to $100M. The consortium's paused trials wait about 15 months; NCI now promises 'the application of Super Intelligence (SI)'","cont"],
+ ["Genesis will double American science productivity within a decade","Darío Gil, Energy Dept, Oct 2026","About 300 projects chosen; test due 2036","pend"],
+ ["Kratsios committed not to leave science in shambles","House Science Committee, July 2026","Same evidence as the golden-age claim. PCAST, co-chaired by Kratsios and David Sacks, was due to hold its first meeting of the term on 6 Nov 2026; the meeting was cancelled that day, and an Energy Department listing of 13 Nov as the new date was retracted","watch"],
+ ["Pentagon has hired to mitigate staff losses","Pentagon official, Oct 2026","Its own review found a 14% workforce loss and asked for $5B to rebuild labs","cont"],
+ ["NIH's commitment to Alzheimer's research has not decreased","HHS spokeswoman, Oct 2026","True on dollars (about $3.9B, up $100M in FY26). But new Alzheimer's projects fell 49% in 2025, and funding was halted at 14 of 35 Alzheimer's research centres","cont"],
+ ["Most departing federal scientists left voluntarily","White House, Oct 2026","Partly true: GAO counts about 80% of federal departures as voluntary on paper, a third of them through buyouts; about 14% were plainly involuntary","part"],
+ ["PhD cuts were the universities' own decision","White House, Oct 2026","AAU says funding uncertainty drove them","cont"]
+];
+document.getElementById("promBody").innerHTML=prom.map(r=>`<tr><td><div class="what">${r[0]}</div></td><td>${r[1]}</td><td>${r[2]}</td><td><span class="st st-${r[3]}">${stat[r[3]]}</span></td></tr>`).join("");
+
+const src={
+ "Base reporting":[
+  ["How Trump Is Dismantling America's Scientific Research Machine","The New York Times, 31 Oct 2026","https://www.nytimes.com/2026/10/31/climate/how-trump-is-dismantling-americas-scientific-research-machine.html"],
+  ["Agency Diverted $1.4 Billion in Science Funds Mandated by Congress","The New York Times, 2 Oct 2026","https://dnyuz.com/2026/10/02/agency-diverted-1-4-billion-in-science-funds-mandated-by-congress/"],
+  ["US science after a year of Trump: what has been lost and what remains","Nature, 20 Jan 2026","https://www.nature.com/immersive/d41586-026-00088-9/index.html"],
+  ["How Tension Over Trump Fractured American Diabetes Research","The New York Times, 9 Nov 2026","https://www.nytimes.com/2026/11/09/science/american-diabetes-association-turmoil.html"]],
+ "Science Under Siege (NYT series)":[
+  ["How Trump Is Dismantling America's Scientific Research Machine","Flavelle, Hwang, Sella, Blinder, Stolberg, Mueller and Bender, 31 Oct 2026","https://www.nytimes.com/2026/10/31/science/how-trump-is-dismantling-americas-scientific-research-machine.html"],
+  ["The American Brain Drain Claims Another Scientist","Eli Saslow, 7 Nov 2026","https://www.nytimes.com/2026/11/07/science/space/holley-bockelmann-astrophysicist-space-trump.html"],
+  ["Young Talent Fueled American Scientific Dominance. Now It's Disappearing.","Katrina Miller, Vimal Patel, Jeff Adelson and Irena Hwang, 9 Nov 2026","https://www.nytimes.com/interactive/2026/11/09/science/trump-funding-cuts-young-scientists-phd-research.html"],
+  ["The Science That U.N.C. Sacrificed to Avoid the Wrath of Trump","Alan Blinder, Stephanie Saul, Irena Hwang and Benjamin Mueller, 13 Nov 2026","https://www.nytimes.com/2026/11/13/us/university-north-carolina-science-research-cuts-trump.html"],
+  ["This Cancer Kills Children in a Year. Research Has Been Stalled for a Year.","Lisa Miller, 15 Nov 2026","https://www.nytimes.com/2026/11/15/well/brain-cancer-children-dipg.html"],
+  ["NCI axes funding for pediatric brain cancer trial consortium, shifts focus to broader oncology group","Fierce Biotech, 2025","https://www.fiercebiotech.com/biotech/nci-axes-funding-pediatric-brain-cancer-trial-consortium-shifts-focus-broader-oncology"],
+  ["Federal funding cuts to pediatric brain cancer research 'taking away hope' from families","PBS NewsHour, 2025","https://www.pbs.org/newshour/show/federal-funding-cuts-to-pediatric-brain-cancer-research-taking-away-hope-from-families"],
+  ["NSF graduate research fellowships expected to fall next year","AIP FYI","https://www.aip.org/fyi/nsf-graduate-research-fellowships-expected-to-fall-next-year"],
+  ["NSF awards record number of coveted PhD fellowships in surprise move","Scientific American","https://www.scientificamerican.com/article/nsf-awards-record-number-of-coveted-phd-fellowships-in-surprise-move"]],
+ "Budgets and spending":[
+  ["NASA: Assessments of Major Projects (GAO-26-108556)", "GAO, 23 Jul 2026", "https://www.gao.gov/products/gao-26-108556"],
+  ["Some SMD activities paused pending OMB guidance", "NASA Watch, 11 Feb 2026", "https://nasawatch.com/uncategorized/some-smd-activities-paused-pending-omb-guidance/"],
+  ["Notice of Fiscal Policies in Effect for FY 2026 (NOT-OD-26-059)", "NIH, 18 Mar 2026", "https://www.grants.nih.gov/grants/guide/notice-files/NOT-OD-26-059.html"],
+  ["NIH Alzheimer's Research Funding Is Back — for 49% Fewer Projects", "Being Patient, 29 Oct 2025", "https://beingpatient.com/alzheimers-research-funding-restored/"],
+  ["Putting Cures Out of Reach: Trump's National Institutes of Health", "Senate HELP Committee minority staff, 2 Feb 2026", "https://www.sanders.senate.gov/wp-content/uploads/02.02.2026_Putting-Cures-Out-of-Reach_final.pdf"],
+  ["Trump administration has cut or frozen $177 billion in grants across every state, analysis shows", "AP via PBS NewsHour, 16 Sep 2026", "https://www.pbs.org/newshour/politics/trump-administration-has-cut-or-frozen-177-billion-in-grants-across-every-state-analysis-shows"],
+  ["Federal Research and Development (R&D) Funding: FY2026","Congressional Research Service, 17 Apr 2026","https://www.everycrsreport.com/files/2026-04-17_R48694_8e605289d9a019ab5ec895a2df98f1b2afd93f1f.html"],
+  ["Congress Passes Fiscal Year 2026 Spending Bills for NSF, NASA, and DOE","American Astronomical Society, Jan 2026","https://aas.org/posts/news/2026/01/congress-passes-fiscal-year-2026-spending-bills-nsf-nasa-and-doe"],
+  ["The FY27 President's Budget Request: NASA, NSF, and DOE Details","American Astronomical Society, Apr 2026","https://aas.org/posts/news/2026/04/fy27-presidents-budget-request-nasa-nsf-and-doe-details"],
+  ["NIH awarded all its grant funding, but delayed and opaque decisions stymied researchers","STAT, 2 Oct 2026","https://statnews.com/2026/10/02/nih-grant-funding-fy2026-analysis"],
+  ["Tracking Two Years of Change in NIH Funding","AAMC, 15 Oct 2026","https://www.aamc.org/about-us/biomedical-research/publication/tracking-two-years-change-nih-funding"],
+  ["Application of Impoundment Control Act to Availability of Funds for Grants (B-337203)","GAO, 5 Aug 2025","https://www.gao.gov/assets/890/880607.pdf"],
+  ["The Week of Oct 5, 2026: NSF ends fiscal year with more than $1 billion unspent","AIP FYI, 5 Oct 2026","https://aip.org/fyi/the-week-of-october-5-2026"],
+  ["Astronomy, Materials Science Awards Plummet at NSF","AIP FYI, 9 Sep 2026","https://www.aip.org/fyi/astronomy-materials-science-awards-plummet-at-nsf"],
+  ["White House withholds NASA science funds","E&E News, 11 Feb 2026","https://www.eenews.net/articles/white-house-withholds-nasa-science-funds/"],
+  ["Senate Appropriations Committee Releases Five FY 2027 Funding Bills","Senate Appropriations Committee, 12 Nov 2026","https://www.appropriations.senate.gov/news/majority/senate-appropriations-committee-releases-five-fy-2027-funding-bills"],
+  ["Senate Appropriations CJS Subcommittee Proposes $24.9 Billion for NASA in FY2027","SpacePolicyOnline, 12 Nov 2026","https://spacepolicyonline.com/news/senate-appropriations-cjs-subcommittee-proposes-24-9-billion-for-nasa-in-fy2027/"],
+  ["NASA Budget 2027: Senate Bill Gives Science $7.43 Billion, Moves Mars Sample Return to Exploration","Tech Times, 13 Nov 2026","https://www.techtimes.com/articles/330682/20261113/nasa-budget-2027-senate-bill-gives-science-743-billion-moves-mars-sample-return-exploration.htm"]],
+ "Rules, courts and settlements":[
+  ["Democrats Plan Investigation Into Climate and Science Cuts Under Trump","The New York Times, 12 Nov 2026","https://www.nytimes.com/2026/11/12/climate/democrats-oversight-committees-letters.html"],
+  ["Joint Task Force statement regarding Harvard University", "GSA, 14 Apr 2025", "https://www.gsa.gov/about-us/newsroom/news-releases/joint-task-force-statement-regarding-harvard-university-04142025"],
+  ["Regulation for Federal Financial Assistance","Federal Register, 29 May 2026","https://www.federalregister.gov/documents/2026/05/29/2026-10817/regulation-for-federal-financial-assistance"],
+  ["The Uniform Grants Regulation: OMB's Relation to Federal Grantmaking Agencies","Congressional Research Service, 4 Sep 2026","https://www.everycrsreport.com/files/2026-09-04_LSB11464_4d8dc58658823914b481aa4e5798aa2ca7401322.html"],
+  ["Supreme Court allows Trump administration to terminate $783 million in NIH grants linked to DEI initiatives","SCOTUSblog, 21 Aug 2025","https://www.scotusblog.com/2025/08/supreme-court-allows-trump-administration-to-terminate-783-million-in-nih-grants-linked-to-dei-initiatives/"],
+  ["The Science One University Sacrificed to Avoid Trump's Wrath","The New York Times, 13 Nov 2026","https://www.nytimes.com/2026/11/13/us/university-north-carolina-science-research-cuts-trump.html"],
+  ["Trump has sued universities for billions. Here's what the strategy tells us","NPR, 29 Jan 2026","https://www.npr.org/2026/01/29/nx-s1-5559293/trump-settlements-colleges-universities"],
+  ["UNC-Chapel Hill strikes bargain with Trump administration to end probes","Higher Ed Dive, Oct 2026","https://www.highereddive.com/news/unc-chapel-hill-strikes-bargain-with-trump-administration-to-end-probes/833458/"],
+  ["UNC-Chapel Hill deal with federal government echoes existing campus policies","WUNC, 20 Oct 2026","https://www.wunc.org/education/2026-10-20/unc-chapel-hill-federal-government-echoes-existing-campus-policies"],
+  ["Justice Department reaches deal, suspends remaining investigations into UVA","The Cavalier Daily, Oct 2025","https://www.cavalierdaily.com/article/2025/10/justice-department-reaches-deal-suspends-remaining-investigations-into-uva"],
+  ["Update on the Compact for Academic Excellence in Higher Education","Steptoe, Nov 2025","https://www.steptoe.com/en/news-publications/update-on-the-compact-for-academic-excellence-in-higher-education.html"],
+ ["Trump Administration Asks First Circuit to Reinstate Harvard Funding Cuts","The Harvard Crimson, 6 Oct 2026","https://www.thecrimson.com/article/2026/10/6/harvard-funding-first-circuit-appeal/"],
+  ["Universities are paying the U.S. millions of dollars. Where will the money go?","Christian Science Monitor, 23 Sep 2025","https://proof.csmonitor.com/USA/Education/2025/0923/universities-trump-administration-settlements"],
+  ["NIH grant funding losses, by state","Becker's, 19 Jun 2025","https://www.beckershospitalreview.com/finance/nih-grant-funding-losses-by-state/"],
+  ["1st Circ. Doubts Harvard Grant Fight Belongs In Claims Court","Law360, 5 Oct 2026","https://www.law360.com/massachusetts/articles/2534111"],
+  ["Appeals court weighs judge's authority to restore Trump administration funding cuts to Harvard","WBUR, 5 Oct 2026","https://www.wbur.org/news/2026/10/05/harvard-federal-funding-cuts-appeal"],
+  ["The Week of Nov 2, 2026: Midterm outcomes will affect science policy","AIP FYI, 2 Nov 2026","https://www.aip.org/newsletter/000001a1-8df7-d7ab-a1e3-cdff988f0000"],
+  ["Science Policy This Week: Nov 9, 2026","AIP FYI, 9 Nov 2026","https://www.aip.org/fyi/the-week-of-november-9-2026"],
+  ["Coalition letter to congressional appropriators on agency actions mirroring the proposed Uniform Guidance revision (116 organisations)","Endocrine Society (host), Nov 2026","https://www.endocrine.org/-/media/endocrine/files/advocacy/society-letters/2026-letters/ugcoalitionlettertohillonagencyactionsfinal.pdf"],
+  ["Trump administration scraps meeting of high-profile tech panel","Reuters via Investing.com, 6 Nov 2026","https://www.investing.com/news/stock-market-news/trump-administration-scraps-meeting-of-panel-that-includes-metas-zuckerberg-nvidias-huang-5008582"],
+  ["NSF Acting Director, Chief of Staff to Exit","AIP FYI, 21 Oct 2026","https://www.aip.org/fyi/nsf-acting-director-chief-of-staff-to-exit"],
+  ["Senator Bill Cassidy Blocks Trump Pick to Head Science Agency","The New York Times, 18 Nov 2026","https://www.nytimes.com/2026/11/18/us/politics/bill-cassidy-jim-oneill-science.html"],
+  ["Researchers and faculty sue NSF over axing of its social science unit","Higher Ed Dive, Nov 2026","https://www.highereddive.com/news/researchers-and-faculty-sue-nsf-over-axing-of-its-social-science-unit/874186/"],
+  ["U.S. Supreme Court rejects Trump's effort to impose DEI policies on UC researchers","CalMatters, 16 Nov 2026","https://calmatters.org/education/higher-education/2026/11/uc-research/"],
+  ["Supreme Court rebuffs Trump administration appeal over DEI funding cuts","AP via ABC News, 16 Nov 2026","https://abcnews.com/US/wireStory/supreme-court-rebuffs-trump-administration-appeal-dei-funding-138187547"],
+  ["Thakur v. Trump Update: U.S. Supreme Court Denies Trump Administration Appeal","Farella Braun + Martel (plaintiffs' counsel), 17 Nov 2026","https://www.fbm.com/news/thakur-v-trump-update-u-s-supreme-court-denies-trump-administration-appeal/"],
+  ["NSF Will Not Change Grantmaking Rules to Align With OMB, for Now","Eos, 17 Nov 2026","https://eos.org/?p=252601"]],
+ "Midterms 2026":[
+  ["Democrats win majority in the Senate, flipping control of upper chamber","CBS News, 3 Nov 2026","https://www.cbsnews.com/news/senate-control-democrats-republicans-2026-midterm-elections/"],
+  ["Democratic Party wins US Senate in 2026 midterm elections","Al Jazeera (AP projection), 4 Nov 2026","https://www.aljazeera.com/news/2026/11/4/democratic-party-flips-us-senate-in-2026-midterm-elections"],
+  ["Democrats projected to win over 250 House seats (live coverage)","CNN, 5 Nov 2026","https://www.cnn.com/2026/11/05/politics/live-news/midterm-election-congress"],
+  ["Advocates for science funding energized by midterm rout","GBH News, 5 Nov 2026","https://www.wgbh.org/news/local/2026-11-05/advocates-for-science-funding-energized-by-midterm-rout"],
+  ["Troy Jackson wins Maine US Senate race over GOP Sen. Susan Collins in key Democratic victory","AP via WLOX, 4 Nov 2026","https://www.wlox.com/2026/11/04/maine-sen-susan-collins-concedes-democrat-troy-jackson-ending-her-run-sixth-term/"]],
+ "Workforce and students":[
+  ["Federal Agency Workforce Changes: Update for July 2025 to January 2026 (GAO-26-108583)", "GAO, 17 Jun 2026", "https://www.gao.gov/assets/gao-26-108583.pdf"],
+  ["Before the Exodus? Young Scientists and the Future of US Science", "NBER Working Paper w35330, Jun 2026", "https://nber.org/papers/w35330"],
+  ["After Restructuring, NSF Wants to Hire More Staff but Reduce Solicitations", "Eos, 26 Feb 2026", "https://eos.org/research-and-developments/after-restructuring-nsf-wants-to-hire-more-staff-but-reduce-solicitations"],
+  ["U.S. government has lost more than 10,000 STEM Ph.D.s since Trump took office","Science, Jan 2026","https://www.science.org/content/article/u-s-government-has-lost-more-10-000-stem-ph-d-s-trump-took-office"],
+  ["Report: Nearly 95k science employees left government as Trump downsized agency workforces","Government Executive, 4 Mar 2026","https://www.govexec.com/workforce/2026/03/report-nearly-95k-science-employees-left-government-trump-downsized-agency-workforces/411888"],
+  ["Federal Science Workforce Declines Sharply Under Trump","AIP FYI, 26 Feb 2026","https://aip.org/fyi/federal-science-workforce-declines-sharply-under-trump"],
+  ["Data-backed review exposes urgent friction points threatening U.S. defense research enterprise","DefenseScoop, 19 Aug 2026","https://defensescoop.com/2026/08/19/review-exposes-friction-points-threatening-u-s-defense-research-enterprise"],
+  ["New PhD Admissions Data Show Threat to U.S. STEM Workforce, Breakthroughs, Innovations","AAU, Jul 2026","https://www.aau.edu/node/37031"],
+  ["New international enrolments in US down 17% this fall","The PIE News, 17 Nov 2025","https://thepienews.com/new-international-enrolments-in-us-down-17-this-fall/"],
+  ["Physics PhDs Are Leaving the US at a Record-high Rate","AIP FYI, 4 Aug 2026","https://www.aip.org/fyi/physics-phds-are-leaving-the-us-at-a-record-high-rate"],
+  ["International student enrollment fell 2.7% in 2025-26","Higher Ed Dive, 16 Nov 2026","https://highereddive.com/news/international-student-enrollment-fell-27-in-2025-26/874661"],
+  ["Report: New international student enrollments in US plunge 15%","UPI via The Korea Times, 16 Nov 2026","https://www.koreatimes.co.kr/world/20261117/report-new-international-student-enrollments-in-us-plunge-15"],
+  ["Visa hurdles, high tuition costs creating a 'perfect storm' for lower international student enrollment","WBUR, 16 Nov 2026","https://wbur.org/news/2026/11/16/visa-hurdles-high-tuition-costs-creating-a-perfect-storm-for-lower-international-student-enrollment"]],
+ "Where they went":[
+  ["The American Brain Drain Claims Another Scientist","The New York Times, 7 Nov 2026","https://www.nytimes.com/2026/11/07/science/space/holley-bockelmann-astrophysicist-space-trump.html"],
+  ["ESA Begins Developing Replacements for NASA's Contributions to LISA","European Spaceflight, 8 May 2026","https://europeanspaceflight.com/esa-begins-developing-replacements-for-nasas-contributions-to-lisa/"],
+  ["\"Shattering\" NSF Budget Proposal Threatens Gravitational Wave Science","Sky & Telescope, 2025","https://skyandtelescope.org/astronomy-news/shattering-nsf-budget-proposal-threatens-gravitational-wave-science/"],
+  ["Harvard loses first place in Nature Index", "Nature Index, 10 Jun 2026", "https://www.nature.com/nature-index/news/harvard-loses-first-place-nature-index"],
+  ["Harvard Slips on a Global Ranking List, as Chinese Schools Surge Ahead", "The New York Times, 15 Jan 2026", "https://www.nytimes.com/2026/01/15/us/harvard-global-ranking-chinese-universities-trump-cuts.html"],
+  ["Choose France for Science programme: profile of the first 46 recipients", "French research ministry, Jan 2026", "https://www.enseignementsup-recherche.gouv.fr/sites/default/files/2026-01/choose-france-for-science-programme-profile-of-the-first-46-recipients-39160.pdf"],
+  ["Alka Patel, chercheuse américaine accueillie à Aix-Marseille Université", "French research ministry, 2 Feb 2026", "https://www.enseignementsup-recherche.gouv.fr/fr/alka-patel-chercheuse-americaine-accueillie-aix-marseille-universite-100489"],
+  ["Top US scientists come to NL amid threats to academic freedom", "DutchNews, 7 Jul 2026", "https://www.dutchnews.nl/2026/07/top-us-scientists-come-to-nl-amid-threats-to-academic-freedom"],
+  ["Science invests €38.9 million to attract 37 international leaders in high-impact social research", "La Moncloa, 30 Jan 2026", "https://www.lamoncloa.gob.es/lang/en/gobierno/news/Paginas/2026/20260130-atrae-programme.aspx"],
+  ["Government of Canada launches new initiative to recruit world-leading researchers","ISED, 9 Dec 2025","https://www.canada.ca/en/innovation-science-economic-development/news/2025/12/government-of-canada-launches-new-initiative-to-recruit-world-leading-researchers.html"],
+  ["Ottawa announces 64 new research chairs in international talent attraction strategy","University Affairs, 27 Aug 2026","https://universityaffairs.ca/news/ottawa-announces-64-new-research-chairs-in-international-talent-attraction-strategy/"],
+  ["Canada lures dozens of scientists from the US","The PIE News, 1 Sep 2026","https://thepienews.com/canada-lures-dozens-of-scientists-from-the-us/"],
+  ["Canada hires 48 scholars away from top US universities","The New York Times via Boston Globe, Aug 2026","https://www.bostonglobe.com/2026/08/30/world/canada-hires-scholars-top-us-universities/"],
+  ["Why a UMass researcher is among the dozens leaving the U.S. for Canada","WBUR, 27 Aug 2026","https://www.wbur.org/news/2026/08/27/massachusetts-us-researchers-leaving-for-canada"],
+  ["American researchers more interested in coming to Europe","DUB, 6 Aug 2026","https://dub.uu.nl/en/news/american-researchers-more-interested-coming-europe"],
+  ["The Netherlands attracts 29 top scientists from the US","DUB, 7 Aug 2026","https://dub.uu.nl/en/news/netherlands-attracts-29-top-scientists-us"],
+  ["First international researchers hosted at Aix-Marseille University","French research ministry, 12 Jan 2026","https://www.enseignementsup-recherche.gouv.fr/en/first-international-researchers-hosted-aix-marseille-university-100490"],
+  ["Join us in shaping Australia's future: Academy of Science leads establishment of a Global Talent Attraction Program","Australian Academy of Science, 17 Apr 2025","https://science.org.au/news-events/news-views/join-us-shaping-australias-future-academy-science-leads-establishment-global-talent-attraction"],
+  ["Nobel Laureate in Chemistry Omar M. Yaghi joins Tsinghua University full-time","Tsinghua University, 3 Jul 2026","https://www.tsinghua.edu.cn/en/info/1244/14984.htm"],
+  ["Europe cashes in as U.S. science and tech exodus gathers pace","Fortune, 28 Sep 2026","https://fortune.com/2026/09/28/americas-scientists-are-looking-abroad-can-european-business-cash-in/"],
+  ["Meet the researchers leaving the U.S. because of Trump's funding cuts and politicization of science","AP via CP24, 19 Oct 2026","https://www.cp24.com/news/world/2026/10/19/meet-the-researchers-leaving-the-us-because-of-trumps-funding-cuts-and-politicization-of-science/"]],
+ "Dividends":[
+  ["Science, the Endless Frontier: A Report to the President","US Government Printing Office, July 1945","https://www.govinfo.gov/content/pkg/GOVPUB-PR32_400-e7966ee70a4f7b47f862431c9776f727/html/GOVPUB-PR32_400-e7966ee70a4f7b47f862431c9776f727.htm"],
+  ["ENIAC: The Army-Sponsored Revolution","US Army Research Laboratory, Jan 1996","https://ftp.arl.mil/~mike/comphist/96summary/"],
+  ["UNIVAC I","US Census Bureau","https://www.census.gov/about/history/bureau-history/census-innovations/technology/univac-i.html"],
+  ["Mother of All Demos","DARPA","https://www.darpa.mil/about/innovation-timeline/mother-of-all-demos"],
+  ["A Brief History of Atomic Time","NIST, 2024","https://nist.gov/atomic-clocks/brief-history-atomic-time"],
+  ["The System: Celebrating 20 Years of GPS","GPS World, 1 Apr 2015","https://www.gpsworld.com/the-system-celebrating-20-years-of-gps/"],
+  ["ARPANET","DARPA","https://www.darpa.mil/about/innovation-timeline/arpanet"],
+  ["NSF Shapes the Internet's Evolution","NSF","https://www.nsf.gov/news/nsf-shapes-internets-evolution"],
+  ["Mosaic Launches an Internet Revolution","NSF","https://nsf.gov/news/mosaic-launches-internet-revolution"],
+  ["On the Origins of Google","NSF, 17 Aug 2004","https://www.nsf.gov/news/origins-google"],
+  ["DNA related to the transforming gene(s) of avian sarcoma viruses is present in normal avian DNA","Nature, 11 Mar 1976","https://www.nature.com/articles/260170a0"],
+  ["How Imatinib Transformed Leukemia Treatment and Cancer Research","National Cancer Institute","https://www.cancer.gov/research/progress/discovery/gleevec"],
+  ["Calculating the economic impact of the Human Genome Project","genome.gov","https://www.genome.gov/27544383/calculating-the-economic-impact-of-the-human-genome-project"],
+  ["Obama Juices the Genome Numbers","FactCheck.org, 30 Jan 2015","https://www.factcheck.org/2015/01/obama-juices-the-genome-numbers/"],
+  ["MRI: Imaging Living Tissue","NSF, 10 May 2024","https://www.nsf.gov/impacts/mri"],
+  ["Persistence Pays Off: Recognizing Katalin Karikó and Drew Weissman","NIH, 12 Oct 2023","https://www.nih.gov/node/243176"],
+  ["Learning Internal Representations by Error Propagation","UCSD Institute for Cognitive Science, Sept 1985","https://apps.dtic.mil/sti/pdfs/ADA164453.pdf"],
+  ["CHM Releases AlexNet Source Code","Computer History Museum, 20 Mar 2025","https://computerhistory.org/blog/chm-releases-alexnet-source-code/"],
+  ["Personal Assistant That Learns (PAL)","DARPA","https://www.darpa.mil/about/innovation-timeline/personal-assistant-that-learns"],
+  ["CNI History (the maser)","Columbia Nano Initiative","https://cni.columbia.edu/expanded-history"],
+  ["The Laser","HRL Laboratories","https://hrl.com/about/laser"],
+  ["Celebrating 60 Years of the World's First Weather Satellite","NOAA NESDIS, 31 Mar 2020","https://www.nesdis.noaa.gov/news/celebrating-60-years-of-the-worlds-first-weather-satellite"],
+  ["Hubble Celebrates 20 Years of Astonishing Discoveries","NASA Science, 22 Apr 2010","https://science.nasa.gov/missions/hubble/hubble-celebrates-20-years-of-astonishing-discoveries"]]
+};
+document.getElementById("srcList").innerHTML=Object.entries(src).map(([g,list])=>`<div><h4>${g}</h4><ol>${list.map(s=>`<li><a href="${s[2]}" target="_blank" rel="noopener">${s[0]}</a> <span class="o">${s[1]}</span></li>`).join("")}</ol></div>`).join("");
+
+const views=[["lineages","Lineages"],["strain","Strain register"],["exodus","Where they went"],["gap","Vought Gap"],["horizon","Payoff horizon"],["promises","Promise tracker"],["sources","Sources"]];
+document.getElementById("tabrow").innerHTML=views.map(([k,l])=>`<a href="#${k}" data-v="${k}">${l}</a>`).join("");
+function show(){
+ const h=(location.hash||"").slice(1);const v=views.some(x=>x[0]===h)?h:"lineages";
+ document.querySelectorAll(".panel").forEach(p=>p.hidden=p.dataset.view!==v);
+ document.querySelectorAll("#tabrow a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
+}
+window.addEventListener("hashchange",show);show();
+</script>
+
+</body></html>

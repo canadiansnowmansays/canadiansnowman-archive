@@ -1,0 +1,400 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Third Rail Ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: a legislative ledger. Summary tally first, then one ruled row per section, each opening to its full bill text. */
+:root{
+  --paper:#f6f8f7; --sheet:#ffffff; --ink:#1b2530; --muted:#5a6872;
+  --rule:#cfd9d5; --ledger:#2e6a50; --ledger-soft:#e3efe8; --cost:#a3402c; --cost-soft:#f6e6e1;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --label:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#111715; --sheet:#18201d; --ink:#e2e9e5; --muted:#9aa9a2;
+  --rule:#2d3a35; --ledger:#6fbf97; --ledger-soft:#1d3329; --cost:#e08a74; --cost-soft:#3a2420; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111715; --sheet:#18201d; --ink:#e2e9e5; --muted:#9aa9a2;
+  --rule:#2d3a35; --ledger:#6fbf97; --ledger-soft:#1d3329; --cost:#e08a74; --cost-soft:#3a2420; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;padding-inline:16px;padding-block:32px 64px}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:40px}
+a{color:var(--ledger)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--ledger);outline-offset:3px}
+.eyebrow,.lbl{font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted);font-weight:600}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,5vw,46px);line-height:1.1;margin:6px 0 10px;text-wrap:balance}
+h2{font-family:var(--label);font-weight:600;font-size:20px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.lede{max-width:65ch;margin:0;color:var(--ink)}
+.byline{font-family:var(--label);font-size:15px;color:var(--muted);margin-top:12px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* Tally */
+.tally{background:var(--sheet);border:1px solid var(--rule);padding:22px;display:grid;gap:18px}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px}
+.fig .v{font-family:var(--mono);font-size:30px;font-weight:500;line-height:1.2}
+.fig .d{font-size:15px;color:var(--muted);line-height:1.4}
+.bar{display:flex;height:34px;border:1px solid var(--ink);background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),var(--rule) calc(10% - 1px) 10%)}
+.seg{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--sheet);background:var(--ledger);border-right:1px solid var(--sheet);overflow:hidden;white-space:nowrap}
+.seg.b{opacity:.82}.seg.c{opacity:.64}
+.seg.rem{background:transparent;color:var(--muted);border-right:0}
+.axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted);font-family:var(--label)}
+.key span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;background:var(--ledger);vertical-align:-1px}
+.key .k2::before{opacity:.82}.key .k3::before{opacity:.64}.key .k4::before{background:var(--cost)}
+.note{font-size:14px;color:var(--muted);margin:0;max-width:75ch}
+
+/* Ledger table */
+.tablewrap{overflow-x:auto;background:var(--sheet);border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:15px}
+th{font-family:var(--label);text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink);font-weight:600}
+td{padding:11px 12px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+td:first-child{font-family:var(--mono);white-space:nowrap}
+td.r,th.r{text-align:right;font-family:var(--mono);white-space:nowrap}
+tr.title td{background:var(--paper);font-family:var(--label);text-transform:uppercase;letter-spacing:.06em;font-size:12px;font-weight:600;color:var(--muted);padding:7px 12px}
+.pos{color:var(--ledger)} .neg{color:var(--cost)}
+tr.total td{border-top:2px solid var(--ink);border-bottom:0;font-weight:600}
+
+/* Give and take */
+.sides{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.side{background:var(--sheet);border:1px solid var(--rule);padding:18px 20px;min-width:0}
+.side h3{font-family:var(--label);font-size:16px;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.side ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15.5px}
+.side .lbl{display:block;margin:12px 0 6px}
+.side .lbl:first-of-type{margin-top:0}
+
+/* Bill text */
+.bill{background:var(--sheet);border:1px solid var(--rule);padding:28px clamp(18px,4vw,48px);display:grid;gap:14px}
+.caption{text-align:center;font-family:var(--label);letter-spacing:.1em;text-transform:uppercase;font-size:14px;font-weight:600}
+.caption.big{font-size:24px;letter-spacing:.2em}
+.long{max-width:68ch;margin:0 auto;text-align:center;font-style:italic}
+.enact{max-width:68ch;margin:0 auto;font-style:italic}
+.titlehead{font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-size:15px;font-weight:600;margin:18px 0 0;padding-top:14px;border-top:1px solid var(--rule)}
+details{border-bottom:1px solid var(--rule)}
+summary{cursor:pointer;list-style:none;display:flex;gap:12px;align-items:baseline;padding:12px 0;font-family:var(--label);font-weight:600;font-size:16px;letter-spacing:.02em}
+summary::-webkit-details-marker{display:none}
+summary .sec{font-family:var(--mono);font-weight:500;min-width:72px;color:var(--ledger)}
+summary::after{content:"+";margin-left:auto;font-family:var(--mono);color:var(--muted)}
+details[open] summary::after{content:"−"}
+.text{padding:0 0 16px 84px;max-width:calc(68ch + 84px);font-size:16px}
+.text p{margin:0 0 10px}
+.text .in{padding-left:1.4em}
+.text table{min-width:0;font-size:14.5px;margin:6px 0 12px;width:auto}
+.text td{border-bottom:1px solid var(--rule)}
+.text td:first-child{font-family:var(--serif);white-space:normal}
+@media (max-width:560px){.text{padding-left:0}summary .sec{min-width:56px}}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+button{font-family:var(--label);font-size:14px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:transparent;color:var(--ink);border:1px solid var(--ink);padding:6px 12px;cursor:pointer}
+button:hover{background:var(--ink);color:var(--sheet)}
+button:focus-visible{outline:2px solid var(--ledger);outline-offset:2px}
+.sources{font-size:15px;max-width:75ch;display:grid;gap:8px}
+.sources p{margin:0}
+footer{font-size:14px;color:var(--muted);border-top:1px solid var(--rule);padding-top:16px}
+
+/* Contents and essays */
+.toc{background:var(--sheet);border:1px solid var(--rule);padding:16px 20px}
+.toc ul{margin:8px 0 0;padding-left:18px;columns:2 260px;column-gap:28px;font-size:15.5px}
+.toc li{break-inside:avoid;margin:0 0 4px}
+.toc .tmeta{color:var(--muted)}
+.status{background:var(--ledger-soft);border-left:3px solid var(--ledger);padding:12px 16px;font-size:15.5px;max-width:75ch}
+.essays{display:grid;gap:12px}
+.essay-item{background:var(--sheet);border:1px solid var(--rule)}
+.essay-item[open]{border-color:var(--ledger)}
+.essay-item>summary{padding:12px 16px;flex-wrap:wrap}
+.essay-item>summary .sec{min-width:92px}
+.essay-item .etitle{font-family:var(--serif);font-weight:600;font-size:17px;letter-spacing:0}
+.essay-item .emeta{font-family:var(--mono);font-weight:400;font-size:12px;color:var(--muted);margin-left:auto}
+.essay-item>summary::after{margin-left:12px}
+.ebody{border-top:1px solid var(--rule);padding:16px;display:grid;gap:12px}
+.field{border:1px solid var(--rule);min-width:0}
+.fhead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 10px;background:var(--ledger-soft)}
+.fhead span{font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:600;color:var(--ledger)}
+.fhead button{font-size:12px;padding:5px 10px}
+.fbody{padding:12px 14px;min-width:0;overflow-wrap:anywhere}
+.fbody.ftitle{font-weight:600;font-size:19px}
+.fbody.mono{font-family:var(--mono);font-size:14px}
+.fbody.essay{max-height:640px;overflow-y:auto}
+.fbody.essay p{margin:0 0 12px;max-width:68ch}
+.fbody.essay h3{font-family:var(--serif);font-size:20px;margin:18px 0 8px}
+.fbody.essay h4{font-family:var(--label);text-transform:uppercase;letter-spacing:.06em;font-size:14px;margin:16px 0 6px}
+.fbody.essay ul{margin:0 0 12px;padding-left:20px}
+.fbody.essay hr{border:0;border-top:1px solid var(--rule);margin:16px 0}
+figure{margin:6px 0 16px;max-width:68ch}
+figure img{display:block;width:100%;height:auto;border:1px solid var(--rule);background:var(--paper)}
+figcaption{font-size:14px;color:var(--muted);font-style:italic;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:9px 14px;font-family:var(--label);font-size:14px}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">The Third Rail · Companion ledger to the series</div>
+  <h1>The Social Security Solvency and Fairness Act of 2027</h1>
+  <p class="lede">A neighbour's draft bill, written from across the border, to stop the automatic 22 per cent cut projected for Social Security in late 2032. It asks something of workers, employers and higher earners, protects everyone already retired or within about five years of it, strengthens the floor for low earners, and leaves the retirement age at 67.</p>
+  <div class="byline">Drafted by Stephen Gordon, CanadianSnowmanSays, with Claude. Not legislative counsel; figures are estimates, not an official score.</div>
+  <p class="status"><strong>Where it stands.</strong> The 120th Congress convenes on January 3, 2027, with Democratic majorities in both chambers and a Republican president holding the veto. Neither side can pass a Social Security bill without the other. This draft is written for exactly that arrangement, the same one that produced the 1983 rescue.</p>
+</header>
+
+<section class="tally" aria-labelledby="tally-h">
+  <div class="lbl" id="tally-h">The gap and what this bill closes</div>
+  <div class="figs">
+    <div class="fig"><div class="v">Q4 2032</div><div class="d">Retirement trust fund projected to run dry (2026 Trustees Report)</div></div>
+    <div class="fig"><div class="v">4.42%</div><div class="d">75-year shortfall, as a share of taxable payroll</div></div>
+    <div class="fig"><div class="v">≈ 70%</div><div class="d">Share of that shortfall this bill closes, by published estimates of similar provisions</div></div>
+    <div class="fig"><div class="v">≈ 30%</div><div class="d">Left to a bipartisan commission with a guaranteed up-or-down vote (Title IV)</div></div>
+  </div>
+  <div>
+    <div class="bar" role="img" aria-label="Estimated share of the 75-year gap closed: taxable ceiling 22 per cent, payroll rate 33 per cent, progressive indexing 21 per cent, less 4 per cent for the stronger minimum benefit; net about 72 per cent, the remainder left to the commission.">
+      <div class="seg" style="width:22%">Ceiling 22</div>
+      <div class="seg b" style="width:33%">Payroll rate 33</div>
+      <div class="seg c" style="width:17%">Indexing 21 − min. 4</div>
+      <div class="seg rem" style="width:28%">Commission</div>
+    </div>
+    <div class="axis"><span>0%</span><span>50%</span><span>100% of gap</span></div>
+  </div>
+  <div class="key"><span>Sec. 101–102 taxable ceiling</span><span class="k2">Sec. 103 payroll rate</span><span class="k3">Sec. 201 indexing, net of Sec. 202 minimum benefit (−4)</span></div>
+  <p class="note">Each figure is the Social Security Chief Actuary's published estimate for the closest comparable provision, on the 2026 Trustees Report basis. The pieces sum to about 72 per cent; provisions interact, so the bill is described as closing roughly 70 per cent. The investment fund is counted at zero.</p>
+</section>
+
+<section aria-labelledby="ledger-h">
+  <h2 id="ledger-h">Section ledger</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Sec.</th><th>Provision</th><th>Who it affects</th><th>Starts</th><th class="r">Est. gap closed</th></tr></thead>
+    <tbody>
+      <tr><td>3</td><td>Hold harmless: no reduction for anyone already receiving benefits, or anyone 57 or older by end of 2027, or their dependants and survivors</td><td>Every current retiree and near-retiree</td><td class="num">Enactment</td><td class="r">n/a</td></tr>
+      <tr class="title"><td colspan="5">Title I · Restoring the revenue base</td></tr>
+      <tr><td>101</td><td>Taxable ceiling rises in ten annual steps until it again covers 90 per cent of all earnings, as it did after 1983</td><td>Workers earning above $192,300 (2027 ceiling), and their employers</td><td class="num">2028–2037</td><td class="r pos">≈ 22%</td></tr>
+      <tr><td>102</td><td>Earnings above the old ceiling earn a modest benefit credit at a 5 per cent rate</td><td>The same higher earners, who get something for what they pay</td><td class="num">2028</td><td class="r">incl. above</td></tr>
+      <tr><td>103</td><td>Payroll tax up 0.1 point a year combined, split worker and employer, from 12.4 to 14.4 per cent</td><td>All workers and employers (about $2.50 a month per step at $60,000)</td><td class="num">2028–2047</td><td class="r pos">≈ 33%</td></tr>
+      <tr class="title"><td colspan="5">Title II · Fairer benefits</td></tr>
+      <tr><td>201</td><td>Progressive price indexing: starting benefits grow more slowly above the 60th percentile of lifetime earnings</td><td>New retirees in the top 40 per cent of earners</td><td class="num">2033</td><td class="r pos">≈ 21%</td></tr>
+      <tr><td>202</td><td>Enhanced minimum benefit: 125 per cent of the poverty line for 30-year careers, scaled for shorter ones, with up to five caregiving years credited</td><td>Long-career low earners; parents and family caregivers</td><td class="num">2028</td><td class="r neg">≈ −4%</td></tr>
+      <tr><td>203</td><td>Retirement age stays at 67; no across-the-board increase</td><td>Everyone, especially lower earners with shorter lives</td><td class="num">n/a</td><td class="r">0%</td></tr>
+      <tr class="title"><td colspan="5">Title III · Supplementary investment fund</td></tr>
+      <tr><td>301–302</td><td>$1.5 trillion fund, capitalised over five years, run by an arm's-length board in broad index funds; 4 per cent of its average value paid to the trust funds yearly</td><td>Taxpayers (borrowing is reported openly); future beneficiaries</td><td class="num">2028; transfers from 2043</td><td class="r">counted 0%</td></tr>
+      <tr class="title"><td colspan="5">Title IV · Solvency safeguard</td></tr>
+      <tr><td>401–402</td><td>If depletion is projected within 10 years, a 12-member bipartisan commission must report a full-solvency bill, which gets a no-amendment, up-or-down vote</td><td>Congress; protected groups stay protected</td><td class="num">On trigger</td><td class="r">the remainder</td></tr>
+      <tr class="total"><td></td><td>Total before the safety valve</td><td></td><td></td><td class="r pos">≈ 70%</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section aria-labelledby="sides-h">
+  <h2 id="sides-h">What each side gets, and what each gives up</h2>
+  <div class="sides">
+    <div class="side">
+      <h3>Republicans</h3>
+      <span class="lbl">Get</span>
+      <ul>
+        <li>Slower benefit growth for higher earners (progressive price indexing, endorsed by President George W. Bush in 2005)</li>
+        <li>The Cassidy–Kaine-style investment fund</li>
+        <li>A commission with expedited procedures, the approach of the TRUST Act</li>
+        <li>A benefit credit that keeps the earned-insurance principle</li>
+      </ul>
+      <span class="lbl">Give up</span>
+      <ul>
+        <li>Two gradual tax increases: a higher ceiling and a higher rate</li>
+        <li>A retirement-age increase</li>
+      </ul>
+    </div>
+    <div class="side">
+      <h3>Democrats</h3>
+      <span class="lbl">Get</span>
+      <ul>
+        <li>A much higher taxable ceiling</li>
+        <li>A real minimum benefit and caregiver credits, drawn from the Social Security 2100 Act</li>
+        <li>No increase in the retirement age</li>
+        <li>Benefit changes confined to the top 40 per cent of earners</li>
+      </ul>
+      <span class="lbl">Give up</span>
+      <ul>
+        <li>Progressive price indexing, a real reduction for upper-middle earners</li>
+        <li>An investment fund many economists doubt</li>
+        <li>A commission some advocates see as a route to cuts</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="bill-h">
+  <h2 id="bill-h">Full text of the draft bill</h2>
+  <div class="tools"><button type="button" id="openAll">Expand all sections</button><button type="button" id="closeAll">Collapse all</button></div>
+  <div class="bill" style="margin-top:14px">
+    <div class="caption">120th Congress · 1st Session</div>
+    <div class="caption big">A Bill</div>
+    <p class="long">To amend title II of the Social Security Act and the Internal Revenue Code of 1986 to restore long-range solvency to the Social Security trust funds, to protect current and near-term beneficiaries, to strengthen the minimum benefit, to establish a supplementary investment fund, and for other purposes.</p>
+    <p class="enact">Be it enacted by the Senate and House of Representatives of the United States of America in Congress assembled,</p>
+
+    <div>
+    <details id="sec-1"><summary><span class="sec">Sec. 1</span>Short title; table of contents</summary><div class="text">
+      <p>(a) SHORT TITLE. This Act may be cited as the "Social Security Solvency and Fairness Act of 2027".</p>
+      <p>(b) TABLE OF CONTENTS. Sec. 1. Short title; table of contents. Sec. 2. Findings. Sec. 3. Protection of current and near-term beneficiaries. Title I: Restoring the revenue base (Secs. 101–103). Title II: Fairer benefits (Secs. 201–203). Title III: Social Security Supplementary Investment Fund (Secs. 301–302). Title IV: Solvency safeguard (Secs. 401–402).</p>
+    </div></details>
+
+    <details id="sec-2"><summary><span class="sec">Sec. 2</span>Findings</summary><div class="text">
+      <p>Congress finds the following:</p>
+      <p>(1) The 2026 Annual Report of the Board of Trustees of the Federal Old-Age and Survivors Insurance and Federal Disability Insurance Trust Funds projects that the Federal Old-Age and Survivors Insurance Trust Fund will be depleted in the fourth quarter of 2032, after which continuing income would be sufficient to pay only about 78 per cent of scheduled benefits.</p>
+      <p>(2) The same report projects a 75-year actuarial deficit of 4.42 per cent of taxable payroll.</p>
+      <p>(3) In 1983 about 90 per cent of covered earnings fell below the contribution and benefit base. Because earnings at the top of the distribution have grown faster than average earnings, that share has since fallen to about 82 per cent.</p>
+      <p>(4) Life expectancy at older ages differs substantially by lifetime income, so that an increase in the retirement age falls most heavily on workers with the lowest earnings and the shortest retirements.</p>
+      <p>(5) The Social Security Amendments of 1983, enacted with the support of both parties on the recommendation of a bipartisan commission, secured the programme for half a century and demonstrate that shared, gradual and clearly scheduled changes are achievable.</p>
+      <p>(6) Inaction is itself a decision, producing an immediate and indiscriminate reduction in benefits for every beneficiary.</p>
+    </div></details>
+
+    <details id="sec-3"><summary><span class="sec">Sec. 3</span>Protection of current and near-term beneficiaries</summary><div class="text">
+      <p>(a) HOLD HARMLESS. Notwithstanding any other provision of this Act, no amendment made by this Act, and no provision of any bill reported under section 401, shall reduce the monthly benefit payable under title II of the Social Security Act to, or on the basis of the wages and self-employment income of, any individual who:</p>
+      <p class="in">(1) is entitled to a benefit under such title on the date of enactment of this Act; or</p>
+      <p class="in">(2) attains age 57 on or before December 31, 2027.</p>
+      <p>(b) DEPENDANTS AND SURVIVORS. The protection in subsection (a) extends to every benefit payable to a spouse, divorced spouse, child or survivor on the basis of the record of an individual described in subsection (a).</p>
+      <p>(c) RULE OF CONSTRUCTION. Nothing in this section limits any increase in benefits under this Act or affects the application of cost-of-living adjustments under section 215(i) of the Social Security Act.</p>
+    </div></details>
+
+    <div class="titlehead">Title I: Restoring the revenue base</div>
+
+    <details id="sec-101"><summary><span class="sec">Sec. 101</span>Restoring the 90 per cent contribution and benefit base</summary><div class="text">
+      <p>(a) IN GENERAL. Section 230 of the Social Security Act (42 U.S.C. 430) is amended by adding at the end the following:</p>
+      <p class="in">"(e) PHASED RESTORATION. (1) For each calendar year from 2028 through 2037, the contribution and benefit base shall be the greater of the amount determined under subsection (b) and the amount determined under paragraph (2).</p>
+      <p class="in">"(2) The amount determined under this paragraph for a calendar year is the amount determined under subsection (b) for that year, plus the product of (A) one-tenth of the difference between the target base and the amount determined under subsection (b), and (B) the number of years elapsed since 2027.</p>
+      <p class="in">"(3) The target base is the amount that the Chief Actuary of the Social Security Administration determines would cause 90 per cent of all wages and self-employment income in covered employment to fall below the contribution and benefit base.</p>
+      <p class="in">"(4) For calendar years after 2037, the contribution and benefit base shall be the amount that the Chief Actuary determines maintains the 90 per cent share described in paragraph (3)."</p>
+      <p>(b) CONFORMING AMENDMENTS. Sections 3121(a)(1) and 1402(b)(1) of the Internal Revenue Code of 1986 shall apply using the contribution and benefit base as determined under subsection (e) of section 230 of the Social Security Act.</p>
+      <p>(c) EFFECTIVE DATE. The amendments made by this section apply to remuneration paid, and taxable years beginning, after December 31, 2027.</p>
+    </div></details>
+
+    <details id="sec-102"><summary><span class="sec">Sec. 102</span>Modest benefit credit for earnings above the former base</summary><div class="text">
+      <p>(a) IN GENERAL. Section 215(a)(1)(A) of the Social Security Act (42 U.S.C. 415(a)(1)(A)) is amended so that, in computing the primary insurance amount, the portion of an individual's average indexed monthly earnings attributable to earnings above the base that would have applied under section 230(b) without regard to section 230(e) is credited at a rate of 5 per cent, in place of the rates otherwise applicable.</p>
+      <p>(b) EFFECTIVE DATE. The amendment made by this section applies to earnings credited for calendar years after 2027.</p>
+    </div></details>
+
+    <details id="sec-103"><summary><span class="sec">Sec. 103</span>Gradual increase in payroll tax rates</summary><div class="text">
+      <p>(a) EMPLOYEES. Section 3101(a) of the Internal Revenue Code of 1986 is amended by replacing the single rate of tax on wages with the following schedule:</p>
+      <table><thead><tr><th>Calendar year</th><th class="r">Employee rate</th></tr></thead><tbody>
+        <tr><td>2027 and earlier</td><td class="r">6.20%</td></tr>
+        <tr><td>2028</td><td class="r">6.25%</td></tr>
+        <tr><td>Each year 2029 through 2046</td><td class="r">prior year + 0.05 pt</td></tr>
+        <tr><td>2047 and later</td><td class="r">7.20%</td></tr>
+      </tbody></table>
+      <p>(b) EMPLOYERS. Section 3111(a) of such Code is amended by applying the same schedule to the employer rate.</p>
+      <p>(c) SELF-EMPLOYED. Section 1401(a) of such Code is amended by applying a combined rate equal to twice the employee rate under subsection (a), reaching 14.40 per cent for 2047 and later.</p>
+      <p>(d) ALLOCATION. Section 201(b) of the Social Security Act (42 U.S.C. 401(b)) is amended so that the additional revenue is allocated between the Federal Old-Age and Survivors Insurance Trust Fund and the Federal Disability Insurance Trust Fund in proportion to the rates otherwise scheduled under that subsection.</p>
+      <p>(e) EFFECTIVE DATE. The amendments made by this section apply to remuneration paid, and taxable years beginning, after December 31, 2027.</p>
+    </div></details>
+
+    <div class="titlehead">Title II: Fairer benefits</div>
+
+    <details id="sec-201"><summary><span class="sec">Sec. 201</span>Progressive price indexing for higher earners</summary><div class="text">
+      <p>(a) NEW BEND POINT. Section 215(a)(1)(B) of the Social Security Act (42 U.S.C. 415(a)(1)(B)) is amended by establishing, for individuals who initially become eligible for old-age or disability insurance benefits in 2033 or later, an additional bend point equal to the average indexed monthly earnings at the 60th percentile of newly retired workers, as determined by the Chief Actuary.</p>
+      <p>(b) PROTECTION BELOW THE BEND POINT. For average indexed monthly earnings at or below the bend point established under subsection (a), the primary insurance amount shall be computed exactly as under current law, including wage indexing of the existing bend points.</p>
+      <p>(c) SLOWER GROWTH ABOVE THE BEND POINT. For average indexed monthly earnings above that bend point, the 32 and 15 per cent factors in section 215(a)(1)(A) shall be reduced for each successive cohort so that the primary insurance amount of a worker with average indexed monthly earnings equal to the contribution and benefit base, as determined without regard to section 230(e), grows from cohort to cohort with the Consumer Price Index rather than with the national average wage index.</p>
+      <p>(d) EFFECTIVE DATE. This section applies to individuals who initially become eligible for benefits after December 31, 2032, subject to section 3.</p>
+    </div></details>
+
+    <details id="sec-202"><summary><span class="sec">Sec. 202</span>Enhanced minimum benefit with caregiver credits</summary><div class="text">
+      <p>(a) IN GENERAL. Section 215(a)(1)(C) of the Social Security Act (42 U.S.C. 415(a)(1)(C)) is amended to read as follows:</p>
+      <p class="in">"(C)(i) For an individual with 30 or more years of coverage, the primary insurance amount shall be not less than one-twelfth of 125 per cent of the annual poverty guideline for a single individual, as published by the Secretary of Health and Human Services for the year in which the individual initially becomes eligible.</p>
+      <p class="in">"(ii) For an individual with more than 10 but fewer than 30 years of coverage, the minimum amount under clause (i) shall be reduced proportionately for each year of coverage fewer than 30.</p>
+      <p class="in">"(iii) For purposes of this subparagraph, a year of coverage is any year in which the individual is credited with four quarters of coverage.</p>
+      <p class="in">"(iv) An individual shall be credited with a caregiving year, counted as a year of coverage for this subparagraph only, for any year in which the individual was the primary caregiver for a child under age 6, or provided at least 960 hours of care to a family member who is disabled or aged 65 or over, as certified under regulations prescribed by the Commissioner. Not more than five caregiving years may be credited to any individual.</p>
+      <p class="in">"(v) For individuals who initially become eligible after 2028, the amount in clause (i) shall be increased by the national average wage index."</p>
+      <p>(b) EFFECTIVE DATE. The amendment made by this section applies to individuals who initially become eligible for benefits after December 31, 2027.</p>
+    </div></details>
+
+    <details id="sec-203"><summary><span class="sec">Sec. 203</span>Preservation of the retirement age</summary><div class="text">
+      <p>(a) NO INCREASE. Nothing in this Act amends the definition of retirement age in section 216(l) of the Social Security Act (42 U.S.C. 416(l)), which shall remain 67 for individuals attaining age 62 after 2021.</p>
+      <p>(b) SENSE OF CONGRESS. It is the sense of Congress that, because of the substantial differences in life expectancy by lifetime income, an across-the-board increase in the retirement age would place a disproportionate share of any reduction on workers with the lowest earnings and shortest retirements, and that solvency should be restored by other means.</p>
+    </div></details>
+
+    <div class="titlehead">Title III: Social Security Supplementary Investment Fund</div>
+
+    <details id="sec-301"><summary><span class="sec">Sec. 301</span>Establishment, capitalisation and governance</summary><div class="text">
+      <p>(a) ESTABLISHMENT. There is established in the Treasury of the United States the Social Security Supplementary Investment Fund (in this title referred to as the "Fund"), separate from, and in addition to, the Federal Old-Age and Survivors Insurance Trust Fund and the Federal Disability Insurance Trust Fund.</p>
+      <p>(b) CAPITALISATION. There is appropriated to the Fund, out of any money in the Treasury not otherwise appropriated, $300,000,000,000 for each of fiscal years 2028 through 2032. The Secretary of the Treasury shall report the cost of this capitalisation, including the associated federal borrowing, in each annual budget submission.</p>
+      <p>(c) BOARD. The Fund shall be governed by the Social Security Investment Board, consisting of seven members:</p>
+      <p class="in">(1) six members appointed by the President, by and with the advice and consent of the Senate, of whom one each shall be selected from lists submitted by the Speaker of the House of Representatives, the minority leader of the House, the majority leader of the Senate and the minority leader of the Senate, and two shall be selected after consultation with all four; and</p>
+      <p class="in">(2) a chair appointed by the President, by and with the advice and consent of the Senate, after consultation with the four leaders named in paragraph (1).</p>
+      <p>(d) QUALIFICATIONS AND TERMS. Members shall have substantial experience in the management of large investment portfolios, shall serve staggered terms of seven years, may not hold any other federal office, and may be removed only for cause.</p>
+      <p>(e) FIDUCIARY DUTY. Members and employees of the Board shall act solely in the interest of Social Security beneficiaries, under fiduciary standards equivalent to those governing the Federal Retirement Thrift Investment Board under section 8477 of title 5, United States Code.</p>
+    </div></details>
+
+    <details id="sec-302"><summary><span class="sec">Sec. 302</span>Investment, transfers and safeguards</summary><div class="text">
+      <p>(a) INVESTMENT POLICY. The Board shall invest the Fund in a diversified portfolio of broad market index funds, including domestic and international equities and fixed-income securities, through external managers selected by competitive process. Neither the Board nor any officer of the United States may direct the selection of individual securities.</p>
+      <p>(b) PROXY VOTING. Proxies shall be voted by external managers under standards published in advance, and no officer of the United States may direct any vote.</p>
+      <p>(c) TRANSFERS. Beginning in fiscal year 2043, the Board shall transfer to the Federal Old-Age and Survivors Insurance Trust Fund and the Federal Disability Insurance Trust Fund, in proportion to their respective costs, an amount each year equal to 4 per cent of the average value of the Fund over the preceding five fiscal years.</p>
+      <p>(d) NO OTHER USE. Amounts in the Fund may not be appropriated, transferred, pledged or used for any purpose other than those described in subsection (c), and the Fund shall not be counted toward any other federal programme.</p>
+      <p>(e) ACCOUNTABILITY. The Fund shall be audited annually by an independent auditor and by the Comptroller General, and each audit, together with the Fund's holdings, costs and returns, shall be published online.</p>
+      <p>(f) BENEFITS NOT AFFECTED. Investment gains or losses of the Fund shall not affect the amount of any benefit payable under title II of the Social Security Act.</p>
+    </div></details>
+
+    <div class="titlehead">Title IV: Solvency safeguard</div>
+
+    <details id="sec-401"><summary><span class="sec">Sec. 401</span>Solvency trigger and bipartisan commission</summary><div class="text">
+      <p>(a) TRIGGER. If any annual report of the Board of Trustees issued after the date of enactment of this Act projects, under intermediate assumptions, that the combined Federal Old-Age and Survivors Insurance Trust Fund and Federal Disability Insurance Trust Fund will be depleted within 10 years of the date of the report, the Chief Actuary shall so certify to Congress within 30 days.</p>
+      <p>(b) COMMISSION. Within 60 days of a certification under subsection (a), there shall be convened a National Commission on Social Security Solvency of 12 members, three appointed by each of the Speaker of the House of Representatives, the minority leader of the House, the majority leader of the Senate and the minority leader of the Senate. The Chief Actuary shall serve as a non-voting adviser.</p>
+      <p>(c) HEARINGS. The Commission shall hold public hearings and publish all actuarial analyses on which it relies.</p>
+      <p>(d) REPORT. Within 180 days of convening, the Commission shall report a bill that, as certified by the Chief Actuary, restores 75-year actuarial balance. The bill may be reported only with the approval of at least 8 members, including at least 3 appointed by leaders of each party.</p>
+      <p>(e) LIMITATIONS. A bill reported under this section:</p>
+      <p class="in">(1) shall comply with section 3; and</p>
+      <p class="in">(2) shall not provide for an across-the-board increase in the retirement age under section 216(l) of the Social Security Act.</p>
+    </div></details>
+
+    <details id="sec-402"><summary><span class="sec">Sec. 402</span>Expedited congressional consideration</summary><div class="text">
+      <p>(a) INTRODUCTION. A bill reported under section 401 shall be introduced in each House by the majority and minority leaders, by request, within 3 legislative days.</p>
+      <p>(b) DISCHARGE. If a committee has not reported the bill within 15 legislative days of introduction, it shall be discharged.</p>
+      <p>(c) NO AMENDMENTS. No amendment to the bill shall be in order in either House.</p>
+      <p>(d) DEBATE AND VOTE. Debate in the Senate shall be limited to 20 hours, and debate in the House to 10 hours, equally divided between the parties. A vote on final passage shall occur immediately after the close of debate, and the bill shall pass on the affirmative vote of a majority of members voting.</p>
+      <p>(e) RULEMAKING POWER. This section is enacted as an exercise of the rulemaking power of each House, with full recognition of the right of either House to change its rules at any time.</p>
+    </div></details>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="src-h">
+  <h2 id="src-h">Sources for the estimates</h2>
+  <div class="sources">
+    <p>Social Security Administration, Office of the Chief Actuary, "Provisions Affecting Payroll Taxes", "Provisions Affecting Level of Monthly Benefits" and "Provisions Affecting Retirement Age", estimates on the 2026 Trustees Report intermediate assumptions. Closest comparable provisions: E3.1 and E3.2 (taxable maximum to 90 per cent; 19 and 24 per cent), E1.4 (payroll rate, 33 per cent), B1.5 (progressive price indexing, 21 per cent), B5.2 and B5.11 (minimum benefit, −3 and −2 per cent), C1.4 (retirement age 69, 32 per cent, not adopted). <a href="https://www.ssa.gov/oact/solvency/provisions/summary.html">SSA solvency provisions</a></p>
+    <p>Congressional Research Service, In Focus IF13256, on the 2026 Social Security Trustees Report, June 25, 2026.</p>
+    <p>Congressional Budget Office, "Increase the Maximum Taxable Earnings That Are Subject to Social Security Payroll Taxes", Options for Reducing the Deficit, December 12, 2024.</p>
+    <p>Alicia H. Munnell, Center for Retirement Research at Boston College, "The Cassidy-Kaine Proposal Does Virtually Nothing to Solve Social Security's Financing Problems", April 9, 2026.</p>
+    <p>Raj Chetty et al., "The Association Between Income and Life Expectancy in the United States, 2001–2014", JAMA, April 26, 2016.</p>
+    <p>Tara Siegel Bernard, "How American Retirees on Different Incomes Rely on Social Security", The New York Times, October 12, 2026.</p>
+  </div>
+</section>
+
+
+<footer>
+  Part of <strong>The Third Rail</strong>, a series on Social Security by Stephen Gordon at <a href="https://canadiansnowmansays.substack.com">canadiansnowmansays.substack.com</a>. This is a neighbour's draft by a Canadian observer, offered for public discussion. It has not been drafted or reviewed by legislative counsel, and its estimates are not an official actuarial score.
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var all = document.querySelectorAll('.bill details');
+  document.getElementById('openAll').addEventListener('click', function(){ all.forEach(function(d){ d.open = true; }); });
+  document.getElementById('closeAll').addEventListener('click', function(){ all.forEach(function(d){ d.open = false; }); });
+  var h = location.hash.slice(1);
+  if (h) { var t = document.getElementById(h); if (t && t.tagName === 'DETAILS') { t.open = true; t.scrollIntoView(); } }
+  // Copy buttons for the essays: rich HTML (keeps photos, captions, links) with a plain-text fallback.
+  function toast(m){var t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';t.setAttribute('role','status');document.body.appendChild(t);}t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(function(){t.hidden=true;},2200);}
+  function copyNode(el,label,rich){
+    var c=el.cloneNode(true); c.querySelectorAll('img[data-src]').forEach(function(i){i.setAttribute('src',i.getAttribute('data-src'));i.removeAttribute('data-src');i.removeAttribute('loading');});
+    var htmlStr=c.innerHTML, text=el.innerText;
+    if(rich&&window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+      navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([htmlStr],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]).then(function(){toast(label+' copied with photos and links');},function(){plain();});
+    } else plain();
+    function plain(){
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast(label+' copied');},sel);} else sel();
+    }
+    function sel(){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected. Press Ctrl+C or Cmd+C');}
+  }
+  var names={t:'Title',s:'Subtitle',e:'Essay',g:'Tags'};
+  document.querySelectorAll('.essay-item [data-copy]').forEach(function(b){
+    b.addEventListener('click',function(ev){ev.preventDefault();var k=b.getAttribute('data-copy');var el=b.closest('.field').querySelector('[data-v]');copyNode(el,names[k],k==='e');});
+  });
+  if (h) { var e = document.getElementById(h); if (e && e.classList.contains('essay-item')) { e.open = true; e.scrollIntoView(); } }
+
+})();
+</script>
+
+</body></html>

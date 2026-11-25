@@ -1,0 +1,403 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Reckoning Ledger</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: masthead -> where-things-stand tiles -> update log -> levers -> sticky filter rail -> ledger cards grouped by theatre, each stamped with action, lever and GOP alignment */
+:root{
+  --bg:#f2f4f6; --surface:#ffffff; --ink:#18202b; --muted:#5b6573; --line:#d6dbe2;
+  --accent:#6b4f12; --accent-soft:#f3ecdc;
+  --good:#1f7a4d; --good-soft:#e2f3ea;
+  --warn:#9a5c08; --warn-soft:#fbefda;
+  --bad:#a3302b; --bad-soft:#f7e2e0;
+  --steel:#2f4a66; --steel-soft:#e2e9f1;
+  --display:"Newsreader", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151c; --surface:#181f29; --ink:#e7ebf1; --muted:#9ba5b3; --line:#2b3543;
+    --accent:#d9b664; --accent-soft:#2c2412;
+    --good:#5fc795; --good-soft:#15291f; --warn:#e3ad58; --warn-soft:#2c2213; --bad:#ef8a83; --bad-soft:#2f1a19;
+    --steel:#8fb3d9; --steel-soft:#1c2b3d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151c; --surface:#181f29; --ink:#e7ebf1; --muted:#9ba5b3; --line:#2b3543;
+  --accent:#d9b664; --accent-soft:#2c2412;
+  --good:#5fc795; --good-soft:#15291f; --warn:#e3ad58; --warn-soft:#2c2213; --bad:#ef8a83; --bad-soft:#2f1a19;
+  --steel:#8fb3d9; --steel-soft:#1c2b3d;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px 60px}
+header h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0 0 6px;text-wrap:balance}
+.kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.live{display:inline-flex;align-items:center;gap:6px;background:var(--bad-soft);color:var(--bad);font-weight:700;font-size:11.5px;letter-spacing:.08em;padding:3px 9px;border-radius:999px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block}
+.updated{font-size:13px;color:var(--muted);margin:0 0 6px}
+.dek{color:var(--muted);max-width:68ch;margin:0 0 18px;font-size:16px}
+.context{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:18px 0 22px}
+.ctx{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.ctx b{display:block;font-family:var(--display);font-size:28px;font-variant-numeric:tabular-nums;line-height:1.1}
+.ctx span{color:var(--muted);font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 22px;max-width:80ch}
+.panel h2,.levers h2{font-family:var(--display);font-size:20px;margin:0 0 6px}
+.panel ul,.levers ul{margin:6px 0 0;padding-left:18px}
+.panel li{margin-bottom:4px}
+.panel time{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.levers{background:var(--steel-soft);border-left:4px solid var(--steel);border-radius:8px;padding:14px 16px;margin:0 0 22px;max-width:80ch}
+.levers p{margin:0 0 6px}
+.controls{position:sticky;top:env(safe-area-inset-top, 0px);z-index:5;background:var(--bg);padding:10px 0 12px;border-bottom:1px solid var(--line);margin-bottom:16px;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.row .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;min-width:70px;font-weight:600}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--steel);border-color:var(--steel);color:var(--surface)}
+.chip:focus-visible,#q:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#q{font:inherit;font-size:14px;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:0;flex:1;max-width:360px}
+.tally{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+.tally strong{color:var(--ink);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.pillar{margin:26px 0 10px;font-family:var(--display);font-size:23px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.pillar small{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px;border-top:4px solid var(--line);min-width:0}
+.card.k-reverse{border-top-color:var(--bad)}
+.card.k-repair{border-top-color:var(--warn)}
+.card.k-keep{border-top-color:var(--good)}
+.card.k-build{border-top-color:var(--steel)}
+.card h3{margin:0;font-size:16px;line-height:1.3;text-wrap:balance}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.tag.first{background:var(--ink);color:var(--surface);border-color:transparent}
+.tag.reverse,.tag.opposed{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.tag.repair,.tag.split{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.tag.keep,.tag.ally{background:var(--good-soft);color:var(--good);border-color:transparent}
+.tag.build{background:var(--steel-soft);color:var(--steel);border-color:transparent}
+.sec{font-size:14px}
+.sec em{font-style:normal;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:1px}
+.sec p{margin:0}
+details{font-size:13.5px;color:var(--muted)}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+details p{margin:6px 0 0}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:6px;border-top:1px dashed var(--line);flex-wrap:wrap}
+.prio{font-size:12px;color:var(--muted)}
+.prio b{color:var(--ink)}
+.st{font-size:12px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.st.moving{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.st.done{background:var(--good-soft);color:var(--good);border-color:transparent}
+.st.blocked{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.empty{color:var(--muted);padding:30px 0;text-align:center}
+.sources{margin-top:40px;font-size:13px;color:var(--muted);max-width:90ch}
+.sources h2{font-family:var(--display);color:var(--ink);font-size:20px}
+.sources ol{padding-left:20px}
+.sources li{margin-bottom:4px}
+@media (max-width:420px){.row .lbl{min-width:100%}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="kicker"><span class="live"><i aria-hidden="true"></i>Live ledger</span>He Loves War: The Hegseth Files · Companion ledger</div>
+  <h1>The Reckoning Ledger</h1>
+  <p class="updated">Edition 3 · Last updated <time datetime="2026-11-18">18 November 2026</time> · Updated as Congress, the courts and the Pentagon act</p>
+  <p class="dek">On 10 November 2026 the House voted to send Thomas Massie's eight articles of impeachment to committee instead of debating them. The questions behind those articles remain open. This ledger sets them out as a working agenda for the Democratic Congress that takes office in January 2027. Each entry names what Hegseth did, what Congress can do about it, which lever moves it, and whether Republicans are likely to help.</p>
+</header>
+
+<section class="context" aria-label="Where things stand">
+  <div class="ctx"><b>211–204</b><span>House vote on 10 Nov 2026 to refer the articles to the Judiciary Committee. Massie was the only Republican against. Eleven Democrats were absent; with them, the motion would have failed on paper</span></div>
+  <div class="ctx"><b>67</b><span>Senate votes needed to convict and remove. Democrats will hold at least 55 seats from January, with Alaska still being counted</span></div>
+  <div class="ctx"><b>$1.5T</b><span>Record Pentagon budget request, still not approved. Lawmakers cite Hegseth as one of the reasons</span></div>
+  <div class="ctx"><b>32%</b><span>Voters approving of Hegseth's handling of the job, against 57% disapproving (Quinnipiac, September 2026)</span></div>
+</section>
+
+<section class="panel" aria-label="Update log">
+  <h2>Update log</h2>
+  <p style="margin:0 0 6px;color:var(--muted)">This ledger is a living document. Entries are added, revised and re-statused as hearings are held, riders are attached, courts rule and the Pentagon acts. The newest change is listed first.</p>
+  <ul>
+    <li><time datetime="2026-11-18">18 Nov 2026</time> · "Hear from the fired commanders" updated: the April firing of Army chief of staff Gen. Randy George, and the 17 November nomination of Hegseth's former aide Gen. Christopher LaNeve to replace him, now before Senate Armed Services. "Condition the $1.5 trillion budget" updated with the $350 billion reconciliation push and the 11 December funding deadline. 24 entries.</li>
+    <li><time datetime="2026-11-16">16 Nov 2026</time> · Edition 3. Senate tile corrected to at least 55 Democratic seats. Referral tile now notes the 11 absent Democrats, whose votes would have defeated the motion on paper. "Decide impeachment on the record" updated: Trump publicly backed Hegseth after his defiant 10 November news conference, having spent weeks asking outside advisers whether to replace him (The Atlantic, 16 Nov). 24 entries.</li>
+    <li><time datetime="2026-11-15">15 Nov 2026</time> · New entry under War powers: "Investigate Port Shuaiba and the ignored drone warnings", following The Atlantic's report that warnings about Iranian Shahed drones were ignored before the strike that killed six soldiers in Kuwait. 24 entries.</li>
+    <li><time datetime="2026-11-11">11 Nov 2026</time> · Edition 1 published: 23 entries across seven areas. All statuses at Not started; the 120th Congress convenes in January 2027.</li>
+  </ul>
+</section>
+
+<section class="levers">
+  <h2>How to read the levers</h2>
+  <p>A Democratic Congress cannot fire a defence secretary, and conviction needs 67 senators. What it can do is fund, fence, legislate and ask questions under oath. Five levers matter:</p>
+  <ul>
+    <li><b>Appropriations</b>: funding levels and binding riders in the defence bill, which the president must sign to keep the Pentagon funded.</li>
+    <li><b>NDAA</b>: the annual defence authorisation, which has passed every year for more than six decades and carries policy the Pentagon must follow.</li>
+    <li><b>Oversight</b>: hearings, subpoenas, Inspector General and GAO referrals. Needs no signature.</li>
+    <li><b>Senate</b>: confirmations, holds on nominees and, if it comes to it, an impeachment trial.</li>
+    <li><b>Courts</b>: cases already running, such as Senator Mark Kelly's suit over his censure.</li>
+  </ul>
+</section>
+
+<div class="controls" role="region" aria-label="Filters">
+  <div class="row"><span class="lbl">Priority</span><div id="f-prio" class="row"></div></div>
+  <div class="row"><span class="lbl">Action</span><div id="f-kind" class="row"></div></div>
+  <div class="row"><span class="lbl">GOP</span><div id="f-gop" class="row"></div></div>
+  <div class="row"><span class="lbl">Lever</span><div id="f-lever" class="row"></div></div>
+  <div class="row"><label class="lbl" for="q">Search</label><input id="q" type="search" placeholder="Minab, boat strikes, Kelly…"></div>
+  <div class="tally" id="tally" aria-live="polite"></div>
+</div>
+
+<div class="legend" aria-hidden="true">
+  <span><i style="background:var(--bad)"></i>Reverse a Hegseth decision</span>
+  <span><i style="background:var(--warn)"></i>Repair or rebuild</span>
+  <span><i style="background:var(--good)"></i>Keep, once verified</span>
+  <span><i style="background:var(--steel)"></i>Investigate or build new</span>
+</div>
+
+<main id="ledger"></main>
+
+<section class="sources">
+  <h2>Sources</h2>
+  <ol>
+    <li>Rep. Thomas Massie, "Impeaching Peter Brian Hegseth, Secretary of Defense, for high crimes and misdemeanors" (articles of impeachment, H. Res. 1655), 9 Nov 2026.</li>
+    <li>The New York Times, "Live Updates: Hegseth Decries 'Slander' as He Seeks to Fend Off Impeachment Drive", 10 Nov 2026.</li>
+    <li>Fox News, Elizabeth Elkind and Pedro B. Rodriguez-Aparicio, "House GOP leaders block Massie's Hegseth impeachment push", 10 Nov 2026.</li>
+    <li>Stars and Stripes, "Republican-led House blocks effort to impeach Hegseth", 10 Nov 2026.</li>
+    <li>The Intercept, Nick Turse, "'Dead Man Walking': Officials Say Hegseth Has to Go", 5 Nov 2026.</li>
+    <li>The Intercept, Nick Turse, "Impeachment Vote Looms for Hegseth", 9 Nov 2026.</li>
+    <li>The Atlantic, Tom Nichols, "Pete Hegseth Lashes Out", 9 Nov 2026.</li>
+    <li>Radio Atlantic, Adam Harris with Nancy Youssef and Tom Nichols, "Congress vs. Hegseth", 9 Nov 2026.</li>
+    <li>The New Republic, Ellie Quinlan Houghtaling, "Pete Hegseth Faces Bleak Future as Even Trump Starts to Turn on Him", 9 Nov 2026 (Bacon on firings and Ukraine funds).</li>
+    <li>FOX 5 DC, Nick Viviani, "Hegseth impeachment vote looms in the House", 9 Nov 2026.</li>
+    <li>ABC News, John Parkinson and Lauren Peller, "Defense Secretary Pete Hegseth could face impeachment vote", 9 Nov 2026.</li>
+    <li>CBS News, "House Democrats file articles of impeachment against Hegseth", 15 Apr 2026 (Ansari's six articles).</li>
+    <li>The Washington Times, "Iranian American Democrat files articles of impeachment against Pete Hegseth", 15 Apr 2026 (Pentagon recruiting claim).</li>
+    <li>Stars and Stripes, "House will not vote on Hegseth impeachment until November", 16 Sep 2026.</li>
+    <li>The Atlantic, Simon Shuster, "Inside the Pentagon's Failure to Shield U.S. Troops From Iranian Drones", 15 Nov 2026.</li>
+    <li>Associated Press, Konstantin Toropin, Russ Bynum and Jack Brook, "Exclusive: Soldiers and Gold Star families press Army leadership after deadly Iranian drone strike", 5 Oct 2026.</li>
+    <li>Military Times, "The Army shut down a specialized drone unit. Legislators want to know why.", 3 Sep 2026.</li>
+    <li>The Atlantic, Jonathan Lemire, "Trump Sets the Olive Branch on Fire", 16 Nov 2026.</li>
+    <li>The New York Times, Greg Jaffe, Adam Entous and Eric Schmitt, "Hegseth Nominates His Former Aide to Lead the Army", 17 Nov 2026.</li>
+    <li>Stars and Stripes, Corey Dickstein, "LaNeve nominated for Army chief of staff", 17 Nov 2026.</li>
+    <li>Army Times, Eve Sampson, "LaNeve formally nominated for Army chief of staff role", 17 Nov 2026.</li>
+    <li>Air &amp; Space Forces Magazine, Greg Hadley, "After Midterms, Congress Returns to Reckon with Defense Funding, NDAA", 9 Nov 2026.</li>
+    <li>Defense One, Shaun McDougall, "Blue wave presages a defense-spending showdown", 6 Nov 2026.</li>
+  </ol>
+  <p>Proposals in this ledger are editorial suggestions, not drafted legislation. Casualty and strike figures are as stated in the cited source; several are disputed. Statuses show where each entry stood at the edition date above.</p>
+</section>
+</div>
+
+<script>
+const ITEMS = [
+// ---------- WAR POWERS ----------
+{p:"War powers",k:"reverse",t:"Cut off funds for unauthorised war with Iran",
+ did:"Took the country to war with Iran on 28 February 2026 without a declaration or authorisation. The 60-day War Powers clock ran out on 1 May. After both chambers passed a concurrent resolution directing withdrawal (3 June and 23 June), forces were sent back into hostilities on 26 June. In May the original operation was declared 'concluded' and later strikes were relabelled as a separate operation.",
+ fix:"A rider barring funds for hostilities against Iran without authorisation, with exceptions for self-defence and force protection, forcing a straight vote on authorisation or withdrawal.",
+ lev:["Appropriations","NDAA"],g:"split",pr:1,
+ why:"Several Republicans already broke ranks on the June war-powers vote, and Warren Davidson calls the war unconstitutional even while opposing impeachment. A funding condition does not need the White House to agree the war is illegal."},
+{p:"War powers",k:"build",t:"Give the War Powers Resolution teeth",
+ did:"Ignored the first concurrent resolution ever passed by both chambers under the 1973 law. The administration leans on I.N.S. v. Chadha (1983), which casts doubt on resolutions that bind the executive without the president's signature, and on a legal memo saying strikes that do not endanger US personnel are not 'hostilities'.",
+ fix:"Reform by statute: an automatic funding cut-off after 60 days without authorisation, a definition of 'hostilities' that covers drone and stand-off strikes, and a fast-track joint resolution procedure.",
+ lev:["NDAA","Oversight"],g:"split",pr:2,
+ why:"Needs a veto-proof margin, so it is a long game. Libertarian Republicans such as Massie and Davidson have pushed versions of this for years."},
+{p:"War powers",k:"build",t:"Publish the full cost of the war",
+ did:"No Pentagon press briefing for six months before 10 November. No public accounting of munitions spent, stockpiles left, damage to US bases or repair bills. Two carrier groups are tied down by the blockade of the Strait of Hormuz.",
+ fix:"Quarterly cost-of-war reports covering munitions, stockpiles, base damage and supplemental needs, with part of the Secretary's office budget fenced until each report arrives.",
+ lev:["Appropriations","NDAA"],g:"ally",pr:1,
+ why:"Fiscal hawks and appropriators in both parties want the numbers before approving a $1.5 trillion request. Fencing office funds is a routine NDAA tool."},
+{p:"War powers",k:"build",t:"Account for American casualties",
+ did:"Held no briefing after a Navy commander died in a helicopter crash on 1 July or after three soldiers were killed by an Iranian missile in Jordan on 17 July. Adam Smith says Congress has had no clarity on a strike in Kuwait that killed six service members. The impeachment articles say seven Americans were wounded in the Maduro raid, a figure the Pentagon has never acknowledged.",
+ fix:"Armed Services hearings and a full public casualty accounting for Iran, Venezuela and Yemen, with prompt notification rules for deaths and serious injuries.",
+ lev:["Oversight","NDAA"],g:"ally",pr:1,
+ why:"Hard for any member to oppose accounting for their own constituents' sons and daughters."},
+{p:"War powers",k:"build",t:"Investigate Port Shuaiba and the ignored drone warnings",
+ did:"An Iranian Shahed drone killed six Army Reserve soldiers and wounded more than two dozen at Port Shuaiba, Kuwait, on 1 March 2026. Army officers in Wiesbaden had sent reports up the chain in December 2025 and February 2026 urging the Middle East commands to field cheap Ukrainian interceptors, already deployed at US bases in Romania and Poland. The officers say Hegseth did not support the effort. Several have since been fired or pushed into retirement, and the Army's experimental drone battalion has lost its drone mission. In March Trump said the US did not need Ukraine's help with drone defence. Eight months on, the US has not fielded a Ukrainian-style sensor and interceptor network, has no deal for Ukraine's new interceptor against jet-powered Shaheds, and has used nearly three-quarters of its Patriot stockpile. The Pentagon disputes the account.",
+ fix:"Subpoena both Wiesbaden reports and the Army's Port Shuaiba investigation, brief the families first, and hear from Gen. Chris Donahue and Gen. Curtis Buzzard under oath. Use the NDAA to require a plan and deadline for fielding low-cost sensor and interceptor defences at Gulf bases, with funding to buy proven allied systems.",
+ lev:["Oversight","NDAA","Appropriations"],g:"ally",pr:1,
+ why:"Protecting deployed troops is the easiest case in this ledger to make across the aisle. A bipartisan group already challenged the drone battalion's shutdown, and cheap interceptors save the Patriots that appropriators are being asked to replace."},
+{p:"War powers",k:"build",t:"Examine the legal basis for the Maduro raid",
+ did:"Directed Operation Absolute Resolve on 3 January 2026, sending more than 150 aircraft and drones and over 200 special operations troops into Caracas to seize Nicolás Maduro. The articles say at least 83 people were killed. There was no authorisation from Congress.",
+ fix:"Hearings on the legal opinion behind the raid, its release to Congress, and a requirement for authorisation before any further operations in Venezuela.",
+ lev:["Oversight"],g:"opposed",pr:2,
+ why:"Trump counts Venezuela as a victory, so Republican support is unlikely. The record still matters for future presidents."},
+
+// ---------- CIVILIAN HARM ----------
+{p:"Civilians and the law of war",k:"build",t:"Release the findings on the Minab school strike",
+ did:"Three Tomahawk missiles hit the Shajareh Tayyebeh Elementary School in Minab on the first morning of the war. Iranian officials say at least 175 people died, most of them children. Senior US officials have privately said the United States was responsible; neither the Pentagon nor Hegseth has said so. On 10 November he called claims that US forces targeted civilians 'slander'.",
+ fix:"Subpoena the investigation, publish its findings, refer the targeting process to the Inspector General, and fund condolence payments.",
+ lev:["Oversight"],g:"split",pr:1,
+ why:"Adam Smith, the likely Armed Services chair, has already asked why no report has reached Congress. This is the entry most likely to define the oversight year."},
+{p:"Civilians and the law of war",k:"repair",t:"Rebuild the civilian-harm safeguards",
+ did:"Asked Congress on 29 May 2025 to repeal the civilian-protection law (10 U.S.C. 184); Congress refused, and the work was halted anyway. The articles say he removed more than 90 percent of civilian-harm staff at combatant commands, cut the Army's casualty-tracking database and dropped civilian protection from the 2026 National Defense Strategy.",
+ fix:"Fence funds until the Civilian Harm Mitigation and Response plan is staffed and running, with Inspector General certification, and restore the casualty database.",
+ lev:["Appropriations","NDAA"],g:"split",pr:1,
+ why:"Congress already passed and funded these programmes for FY2025 and FY2026. This is enforcing existing law, not writing new policy."},
+{p:"Civilians and the law of war",k:"reverse",t:"Stop the boat strikes",
+ did:"Ordered strikes on alleged drug boats since 2 September 2025. The articles count at least 63 attacks on 67 vessels and at least 221 dead; Hegseth now says more than 70 boats and over 218 'narco-terrorists'. Two survivors were killed in a second strike on 2 September; eight shipwrecked survivors died waiting about 45 hours for rescue after a 30 December attack.",
+ fix:"A rider barring lethal force against vessels without authorisation from Congress, a return of interdiction to the Coast Guard, and release of the legal memo behind the campaign.",
+ lev:["Appropriations","Oversight"],g:"opposed",pr:1,
+ why:"The hardest fight on the list: the administration calls the campaign a success. The survivor killings are the strongest case for Republicans uneasy about the precedent."},
+{p:"Civilians and the law of war",k:"reverse",t:"Protect independent military lawyers",
+ did:"Removed the top Judge Advocates General of the Army, Navy and Air Force without stated cause, and said he did not want military lawyers acting as 'roadblocks' to orders.",
+ fix:"An NDAA provision making the service JAGs removable only for cause, with written notice to the Armed Services Committees.",
+ lev:["NDAA"],g:"split",pr:2,
+ why:"A narrow structural fix that outlasts this Secretary. Senate Armed Services has bipartisan members with legal backgrounds."},
+{p:"Civilians and the law of war",k:"repair",t:"Count the Yemen dead",
+ did:"Ran Operation Rough Rider against the Houthis from 15 March to 6 May 2025, more than 1,100 strikes. The Pentagon's own count was 153 civilians killed; the Yemen Data Project counted at least 238. His leaked Signal message said 'we can easily pause'.",
+ fix:"An independent civilian-casualty review of the campaign, published in full.",
+ lev:["Oversight"],g:"split",pr:3,
+ why:"Lower urgency than Iran, but the gap between counts goes to whether the Pentagon can be trusted on the newer wars."},
+
+// ---------- COMMAND ----------
+{p:"Command and the ranks",k:"build",t:"Hear from the fired commanders",
+ did:"Removed Gen. Charles Q. Brown Jr., Adm. Lisa Franchetti, Gen. David Allvin, Adm. Linda Fagan, Lt. Gen. Jennifer Short, Vice Adm. Shoshana Chatfield and others, most recently Lt. Gen. Brett Sylvia. Many were women or minorities. One, Nancy Lacore, has just been elected to Congress. In April he fired the Army chief of staff, Gen. Randy George, amid disputes over his involvement in officer promotions, and told senators only that 'we needed new leadership'. On 17 November the White House nominated Gen. Christopher LaNeve, Hegseth's former senior military aide and acting chief since April, to replace George. The Army has had no Senate-confirmed top uniformed or civilian leader since Army Secretary Dan Driscoll resigned.",
+ fix:"Armed Services hearings with fired generals and admirals, and a GAO review of every senior removal since January 2025.",
+ lev:["Oversight"],g:"split",pr:1,
+ why:"Nancy Youssef notes how silent the Hill has been about the firings. Don Bacon says the firings worry him more than anything in Massie's articles. The LaNeve nomination, referred to Senate Armed Services on 16 November, gives senators a direct venue: chairman Roger Wicker acknowledged bipartisan opposition to LaNeve on the committee in August, and Joni Ernst is reported to be among the Republicans opposed. If the outgoing Senate does not act before 3 January, the nomination falls to the Democratic majority."},
+{p:"Command and the ranks",k:"repair",t:"Protect promotion lists from politics",
+ did:"Struck officers from promotion lists the Senate had approved, in a pattern reporting has tied to women and minority officers.",
+ fix:"Require written cause to Senate Armed Services whenever the Secretary removes an officer from an approved list, plus annual data on removals by sex and race.",
+ lev:["NDAA","Senate"],g:"split",pr:2,
+ why:"Senators confirm these lists; they have an institutional interest in not having their votes quietly overridden."},
+{p:"Command and the ranks",k:"build",t:"Stem the exodus of mid-career officers",
+ did:"A Military.com poll this month found 53 percent of active service members want to leave sooner because the military is becoming more politicised. Captains and majors are watching their seniors being pushed out.",
+ fix:"A GAO retention study, published exit-survey data, and retention incentives aimed at mid-grade officers.",
+ lev:["Oversight","Appropriations"],g:"ally",pr:2,
+ why:"Readiness is a shared Republican and Democratic concern. This entry can be argued without mentioning Hegseth at all."},
+{p:"Command and the ranks",k:"repair",t:"Rein in the leak hunts",
+ did:"Subjected officials, including senior leaders, to repeated polygraphs. A senior targeting adviser says he was pushed out for blowing the whistle on efforts to weaken civilian protections.",
+ fix:"Notification to Congress of polygraph programmes and enforcement of whistleblower protections, with Inspector General review of retaliation claims.",
+ lev:["Oversight","NDAA"],g:"split",pr:3,
+ why:"Whistleblower protection has a long bipartisan history, notably under Chuck Grassley."},
+{p:"Command and the ranks",k:"keep",t:"Verify the recruiting gains",
+ did:"The Pentagon says recruiting rose under Hegseth to levels not seen in more than a decade.",
+ fix:"Ask GAO to verify the figures and identify which practices produced them, then keep what works.",
+ lev:["Oversight"],g:"ally",pr:3,
+ why:"If the claim holds, it belongs in the record. A ledger that credits what works is harder to dismiss as partisan."},
+
+// ---------- CONGRESS, PRESS, SPEECH ----------
+{p:"Congress, the press and free speech",k:"reverse",t:"End the punishment of Senator Kelly",
+ did:"After Kelly told troops on 18 November 2025 that they could refuse illegal orders, the Pentagon floated recalling him to active duty. Hegseth ordered a Navy review, censured him on 5 January 2026 and moved to reduce his retired rank and pension. A federal judge blocked the punishment; the Justice Department has appealed.",
+ fix:"An NDAA provision barring recall or grade reduction of retirees as punishment for lawful speech, and hearings on the decision.",
+ lev:["NDAA","Courts"],g:"split",pr:2,
+ why:"Nearly a fifth of Congress are veterans. A precedent that lets the Pentagon punish retired members of Congress for speech threatens members of both parties."},
+{p:"Congress, the press and free speech",k:"reverse",t:"Restore the Pentagon press corps",
+ did:"Expelled the traditional Pentagon press corps and imposed credential rules against soliciting or publishing 'unapproved' material. Before 10 November he had not held a news conference since May.",
+ fix:"A rider requiring fair credentialing standards and regular public briefings during combat operations.",
+ lev:["Appropriations"],g:"split",pr:2,
+ why:"Press freedom polls well, and Republican members also rely on Pentagon reporters for information the department withholds from them."},
+{p:"Congress, the press and free speech",k:"repair",t:"Make the Pentagon answer Congress",
+ did:"Withheld basic information from Congress for two years, according to members of both parties. Thom Tillis has criticised 'the bad advice you've given to president'.",
+ fix:"Subpoenas for testimony from Hegseth and Deputy Secretary Steve Feinberg, as Adam Smith has proposed, with office funds fenced until requested documents arrive.",
+ lev:["Oversight","Appropriations"],g:"ally",pr:1,
+ why:"Every committee wants answers to its own questions. Institutional prerogative is the most reliable bipartisan glue on the Hill."},
+
+// ---------- MONEY ----------
+{p:"Money",k:"repair",t:"Condition the $1.5 trillion budget",
+ did:"Requested a record $1.5 trillion while reducing deployments in Europe and possibly the Middle East: a $1.15 trillion base bill plus $350 billion through a separate reconciliation bill. The request is still not approved, and lawmakers name Hegseth among the reasons. He says the department is 'flooding the zone' for funding in the lame duck, and on 5 November urged 'every patriotic member of Congress' to back a reconciliation bill of 'at least $350 billion'. Analysts expect that bill to fail; the Pentagon is running on a continuing resolution that expires on 11 December.",
+ fix:"A full-year bill with transparency conditions attached: cost-of-war reporting, audit progress and casualty accounting, instead of a blank cheque.",
+ lev:["Appropriations"],g:"ally",pr:1,
+ why:"Nancy Youssef suggests Republicans may use the budget to press for a change at the top. Leverage runs out once the money is signed."},
+{p:"Money",k:"reverse",t:"Release the withheld Ukraine money",
+ did:"Withheld money Congress appropriated for Ukraine all year, according to Don Bacon.",
+ fix:"Anti-impoundment language with fixed release deadlines and a GAO ruling on whether the delay broke the Impoundment Control Act.",
+ lev:["Appropriations","Oversight"],g:"ally",pr:1,
+ why:"Bacon and other Republican Ukraine supporters named this as a reason for their unease. The power of the purse is Congress's own."},
+
+// ---------- INSTITUTIONS ----------
+{p:"Military education",k:"repair",t:"Release the war-college review",
+ did:"Commissioned a 90-day review of the senior war colleges by three retired colonels with no experience in military education; the report has not been released. On 9 November he told the Naval War College faculty they were trying to 'wait out President Trump' and ended its link with Brown University's Watson Center.",
+ fix:"Release the report, and use the NDAA to protect civilian faculty tenure and academic freedom at the academies and war colleges.",
+ lev:["NDAA","Oversight"],g:"split",pr:3,
+ why:"Members who nominate cadets to the academies have a stake in what they are taught. See Part IX of the series, The Magic Marker."},
+
+// ---------- ACCOUNTABILITY ----------
+{p:"The Secretary himself",k:"build",t:"Decide impeachment on the record",
+ did:"Faced Massie's eight articles, which the House referred to committee 211–204 on 10 November, and six earlier articles filed by Rep. Yassamin Ansari in April. He called the effort 'a farce' and said he would carry out the operations 'again tomorrow'. Trump, who had spent weeks asking outside advisers whether to replace him, posted his support after that defiant news conference and read the vote as proof that he still controlled the party. Eleven Democrats missed the vote, many citing traffic; on paper, their votes would have defeated the referral.",
+ fix:"Hold the hearings first, then vote on articles built from the evidence they produce. Removal needs 67 senators, so the record is the realistic goal.",
+ lev:["Oversight","Senate"],g:"split",pr:1,
+ why:"Thom Tillis has said Hegseth 'needs to go', and Ted Cruz predicted impeachment was 'extremely likely, if not certain' if he did not leave. Hakeem Jeffries says Democrats will 'run Pete Hegseth out of town'. Some Republicans have quietly floated making him the fall guy for the war and oil prices, but with Trump's public backing, removal now runs through the Democratic Congress, not the White House."},
+{p:"The Secretary himself",k:"repair",t:"Close the Signal file",
+ did:"The Pentagon's Inspector General concluded in December 2025 that Hegseth violated security protocols and endangered troops by sharing operational details on Signal from a personal device.",
+ fix:"Follow-up oversight on records retention and personal-device use by senior officials, with clear statutory rules for messaging apps.",
+ lev:["Oversight","NDAA"],g:"split",pr:3,
+ why:"The finding is already made by the Pentagon's own watchdog. What remains is making the rules stick for whoever comes next."},
+];
+
+const KINDS = {reverse:"Reverse",repair:"Repair",keep:"Keep",build:"Investigate / build"};
+const GOP = {ally:"GOP allies likely",split:"GOP split",opposed:"GOP likely opposed"};
+const LEVERS = ["Appropriations","NDAA","Oversight","Senate","Courts"];
+const STATUS_CLASS = {"Not started":"","Hearing held":"moving","Introduced":"moving","In NDAA":"moving","In appropriations":"moving","Passed a chamber":"moving","Enacted":"done","Vetoed":"blocked","Blocked":"blocked"};
+const PRIO = {"1":"First 100 days","2":"First year","3":"Longer term"};
+const state = {prio:new Set(), kind:new Set(), gop:new Set(), lever:new Set(), q:""};
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function chips(id, entries, set){
+  const el = document.getElementById(id);
+  entries.forEach(([val,label])=>{
+    const b = document.createElement("button");
+    b.className="chip"; b.type="button"; b.textContent=label; b.setAttribute("aria-pressed","false");
+    b.id = id+"-"+String(val).replace(/\s+/g,"-").toLowerCase();
+    b.addEventListener("click",()=>{
+      if(set.has(val)){set.delete(val);b.setAttribute("aria-pressed","false");}
+      else{set.add(val);b.setAttribute("aria-pressed","true");}
+      render();
+    });
+    el.appendChild(b);
+  });
+}
+chips("f-prio", Object.entries(PRIO), state.prio);
+chips("f-kind", Object.entries(KINDS), state.kind);
+chips("f-gop", Object.entries(GOP), state.gop);
+chips("f-lever", LEVERS.map(l=>[l,l]), state.lever);
+document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value.trim().toLowerCase();render();});
+
+function render(){
+  const list = ITEMS.map((it,i)=>({...it,i})).filter(it=>{
+    if(state.prio.size && !state.prio.has(String(it.pr))) return false;
+    if(state.kind.size && !state.kind.has(it.k)) return false;
+    if(state.gop.size && !state.gop.has(it.g)) return false;
+    if(state.lever.size && !it.lev.some(l=>state.lever.has(l))) return false;
+    if(state.q){
+      const hay=(it.t+" "+it.did+" "+it.fix+" "+it.why+" "+it.p).toLowerCase();
+      if(!hay.includes(state.q)) return false;
+    }
+    return true;
+  });
+  const c = k=>list.filter(x=>x.k===k).length;
+  document.getElementById("tally").innerHTML = `<span><strong>${list.length}</strong> of ${ITEMS.length} entries</span>
+    <span><strong>${c("reverse")}</strong> reversals</span>
+    <span><strong>${c("repair")}</strong> repairs</span>
+    <span><strong>${c("build")}</strong> investigations or new</span>
+    <span><strong>${c("keep")}</strong> keep</span>
+    <span><strong>${list.filter(x=>x.g==="ally").length}</strong> with likely GOP allies</span>
+    <span><strong>${list.filter(x=>x.pr===1).length}</strong> first-100-days</span>`;
+  const main = document.getElementById("ledger");
+  if(!list.length){main.innerHTML='<p class="empty">No entries match these filters. Clear a filter to see more.</p>';return;}
+  const groups = {};
+  list.forEach(it=>{(groups[it.p]=groups[it.p]||[]).push(it);});
+  Object.values(groups).forEach(arr=>arr.sort((a,b)=>a.pr-b.pr||a.i-b.i));
+  main.innerHTML = Object.entries(groups).map(([p,arr])=>`
+    <h2 class="pillar">${esc(p)} <small>${arr.length} ${arr.length===1?"entry":"entries"}</small></h2>
+    <div class="grid">${arr.map(card).join("")}</div>`).join("");
+}
+function card(it){
+  const cur = it.st||"Not started";
+  return `<article class="card k-${it.k}">
+    <div class="tags">${it.pr===1?'<span class="tag first">First 100 days</span>':""}<span class="tag ${it.k}">${KINDS[it.k]}</span><span class="tag ${it.g}">${GOP[it.g]}</span>${it.lev.map(l=>`<span class="tag">${l}</span>`).join("")}</div>
+    <h3>${esc(it.t)}</h3>
+    <div class="sec"><em>What Hegseth did</em><p>${esc(it.did)}</p></div>
+    <div class="sec"><em>What Congress can do</em><p>${esc(it.fix)}</p></div>
+    <details><summary>Politics and path</summary><p>${esc(it.why)}</p></details>
+    <div class="foot"><span class="prio">Priority: <b>${PRIO[it.pr]}</b></span>
+      <span class="st ${STATUS_CLASS[cur]||""}" title="Status as of the latest edition">${esc(cur)}</span></div>
+  </article>`;
+}
+render();
+</script>
+
+</body></html>

@@ -8,6 +8,7 @@ URL scheme matches the May 2026 site so old links keep working:
 """
 import datetime as dt
 import html
+import re
 import json
 import os
 import shutil
@@ -44,7 +45,7 @@ def thumb(src, w=480, h=300):
 
 def page(rel, title, body, desc="", extra_head="", active=""):
     """Wrap body in the site chrome. rel = path prefix back to site root."""
-    nav = [("", "Home"), ("sections/", "Series"), ("chronological/", "By date"), ("search/", "Search")]
+    nav = [("", "Home"), ("sections/", "Series"), ("ledgers/", "Ledgers"), ("chronological/", "By date"), ("search/", "Search")]
     links = "".join(
         f'<a href="{rel}{h}"{" class=active" if active == lbl else ""}>{lbl}</a>' for h, lbl in nav
     )
@@ -125,6 +126,21 @@ def build(out):
         with open(full, "w", encoding="utf-8") as f:
             f.write(text)
 
+    # ---------- public ledgers ----------
+    ldir = os.path.join(HERE, "ledgers")
+    ledgers = json.load(open(os.path.join(ldir, "ledgers.json"), encoding="utf-8")) if os.path.isdir(ldir) else []
+    ledger_for = {l["series"]: l for l in ledgers if l.get("series") and l.get("file")}
+    bar = ('<div style="position:sticky;top:0;z-index:99999;display:flex;gap:1rem;justify-content:space-between;align-items:center;'
+           'padding:.45rem 1rem;background:#1b2430;color:#fff;font:600 13px/1.4 system-ui,-apple-system,Segoe UI,sans-serif">'
+           '<a href="../../" style="color:#fff;text-decoration:none">❄ Canadian Snowman Says · The Archive</a>'
+           '<a href="../" style="color:#f3c2c5;text-decoration:none">All ledgers →</a></div>')
+    for l in ledgers:
+        if not l.get("file"):
+            continue
+        h = open(os.path.join(ldir, l["file"] + ".html"), encoding="utf-8").read()
+        h = re.sub(r"(<body[^>]*>)", lambda m: m.group(1) + bar, h, count=1, flags=re.I)
+        write(f"ledgers/{l['file']}/index.html", h)
+
     # ---------- essay pages ----------
     for name, ps in by.items():
         chrono = sorted(ps, key=lambda p: p["date"])
@@ -199,6 +215,9 @@ def build(out):
         art = f'<img class="landing-img" src="{e(cdn(pic, 600))}" alt="">' if pic else ""
         n = len(ps)
         toggle = "" if n < 3 else f"""<div class="order" role="group" aria-label="Order"><button data-o="old"{' aria-pressed="true"' if not newest else ''}>Oldest first</button><button data-o="new"{' aria-pressed="true"' if newest else ''}>Newest first</button></div>"""
+        led = ledger_for.get(name)
+        if led:
+            paras += f'<p class="ledgerlink">Companion ledger: <a href="{rel}ledgers/{led["file"]}/">{e(led["title"])}</a></p>'
         body = f"""<p class="crumbs">{crumbs}</p>
 <header class="landing">{art}<div><h1>{e(name)}</h1>{paras}
 <p class="meta">{n} essay{'s' if n != 1 else ''} · <a href="{SUBSTACK}/s/{e(sslug(name))}">This series on Substack</a></p></div></header>
@@ -232,6 +251,20 @@ document.querySelectorAll('.order button').forEach(b => b.addEventListener('clic
     body = f"""<header class="serieshead"><h1>All series</h1><p class="meta">{len(by)} series and sections, A to Z. Grouped sections (The Middle Kingdom, The Opera Cycle, The AI Trials and Tribulations) open onto their own series.</p></header>
 <div class="grid">{az}</div>"""
     write("sections/index.html", page(rel, f"All series · {SITE_NAME}", body, active="Series"))
+
+    # ---------- ledgers index ----------
+    items = []
+    for l in ledgers:
+        ser = l.get("series")
+        ser_link = f' · <a href="../sections/{sslug(ser)}/">{e(meta.get(ser, {}).get("short", ser))}</a>' if ser in by else ""
+        if l.get("file"):
+            href, live = f'{l["file"]}/', f' · <a href="https://claude.ai/artifact/{l["slug"]}">Live version in Claude</a>'
+        else:
+            href, live = l["external"], ""
+        items.append(f'<li><h3><a href="{e(href)}">{e(l["title"])}</a></h3><p>{e(l["about"])}</p><p class="meta">{ser_link.lstrip(" ·")}{live}</p></li>')
+    body = f"""<header class="serieshead"><h1>Public ledgers</h1><p class="meta">The running records behind the series: what was undone, what can be repaired, and the draft bills offered from north of the border. Copies here are refreshed daily from the live versions.</p></header>
+<ul class="ledgers">{''.join(items)}</ul>"""
+    write("ledgers/index.html", page("../", f"Ledgers · {SITE_NAME}", body, active="Ledgers"))
 
     # ---------- chronological ----------
     months = OrderedDict()
@@ -276,6 +309,8 @@ window.addEventListener('DOMContentLoaded', () => {
 </section>
 <h2 class="sect">Latest essays <a class="more" href="chronological/">Everything by date →</a></h2>
 <div class="grid">{''.join(card(p, rel) for p in latest)}</div>
+<h2 class="sect">Public ledgers <a class="more" href="ledgers/">All ledgers →</a></h2>
+<div class="ledgerstrip">{''.join(f'<a href="ledgers/{l["file"]}/">{e(l["title"])}</a>' for l in ledgers if l.get("file"))}</div>
 <h2 class="sect">Recently active series <a class="more" href="sections/">All {len(by)} series →</a></h2>
 <div class="grid">{''.join(series_card(n, rel) for n in active_series)}</div>"""
     write("index.html", page(rel, f"{SITE_NAME} · The Archive", body,
