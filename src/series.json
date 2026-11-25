@@ -455,6 +455,23 @@
   "image": "https://substack-post-media.s3.amazonaws.com/public/images/41f8eadb-9be9-4c7a-aa5b-dcfc482a1bd8_539x539.png"
  },
  {
+  "name": "Sketches of Elsinore",
+  "short": "Sketches of Elsinore",
+  "sections": [
+   "Sketches of Elsinore"
+  ],
+  "aliases": [
+   "Sketches from Elsinore",
+   "The Moonbeam Chronicle"
+  ],
+  "parent": null,
+  "order": "oldest",
+  "slug": "sketches-of-elsinore",
+  "description": "Weekly satirical sketches about a fictional Ontario city on the Avon River, written in the tradition of Stephen Leacock. The Moonbeam Chronicle, by Stephen Gordon.",
+  "image": "https://substack-post-media.s3.amazonaws.com/public/images/b789d693-a9eb-4dfc-8484-a685c1838262_554x554.png",
+  "substack": "https://stephengordon1951.substack.com"
+ },
+ {
   "name": "Stephen's Sunday Satire",
   "short": "Stephen's Sunday Satire",
   "sections": [

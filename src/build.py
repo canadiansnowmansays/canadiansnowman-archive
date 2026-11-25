@@ -69,7 +69,7 @@ def page(rel, title, body, desc="", extra_head="", active=""):
 {body}
 </main>
 <footer class="foot">
-  <p>Essays by {AUTHOR}, written in open collaboration with Claude. First published on <a href="{SUBSTACK}">CanadianSnowmanSays on Substack</a>; this archive is an independent backup, rebuilt automatically every day.</p>
+  <p>Essays by {AUTHOR}, written in open collaboration with Claude. First published on Substack at <a href="{SUBSTACK}">CanadianSnowmanSays</a> and <a href="https://stephengordon1951.substack.com">Sketches of Elsinore</a>; this archive is an independent backup, rebuilt automatically every day.</p>
 </footer>
 </body>
 </html>
@@ -175,7 +175,7 @@ def build(out):
 {f'<img class="pf-hidden" data-pagefind-meta="image[src]" src="{e(thumb(p["cover"], 240, 160))}" alt="">' if p['cover'] else ''}
 {body}
 </div>
-<p class="original"><a href="{SUBSTACK}/p/{e(p['slug'])}">Read this essay on Substack, with comments →</a></p>
+<p class="original"><a href="{p.get('pub', SUBSTACK)}/p/{e(p['slug'])}">Read this essay on Substack, with comments →</a></p>
 <nav class="prevnext">{''.join(pn)}</nav>
 </article>"""
             write(f"posts/{p['num']}/index.html",
@@ -220,7 +220,7 @@ def build(out):
             paras += f'<p class="ledgerlink">Companion ledger: <a href="{rel}ledgers/{led["file"]}/">{e(led["title"])}</a></p>'
         body = f"""<p class="crumbs">{crumbs}</p>
 <header class="landing">{art}<div><h1>{e(name)}</h1>{paras}
-<p class="meta">{n} essay{'s' if n != 1 else ''} · <a href="{SUBSTACK}/s/{e(sslug(name))}">This series on Substack</a></p></div></header>
+<p class="meta">{n} essay{'s' if n != 1 else ''} · <a href="{e(s.get('substack') or SUBSTACK + '/s/' + sslug(name))}">This series on Substack</a></p></div></header>
 {sub}
 <div class="listhead"><h2 class="sect">Essays</h2>{toggle}</div>
 <ol class="rows" data-order="{'new' if newest else 'old'}">{items}</ol>

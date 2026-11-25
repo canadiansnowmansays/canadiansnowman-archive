@@ -21,11 +21,11 @@ def _get(url, tries=5):
             print("retrying after", e)
 
 
-def archive(stop_at=None, max_pages=1000):
+def archive(stop_at=None, max_pages=1000, pub=None):
     """Yield published posts newest-first. Stops once a post id in stop_at is seen."""
     cursor = None
     for _ in range(max_pages):
-        url = f"{PUB}/api/v1/archive?sort=new"
+        url = f"{pub or PUB}/api/v1/archive?sort=new"
         if cursor:
             url += "&cursor=" + urllib.parse.quote(cursor)
         d = _get(url)
@@ -39,16 +39,16 @@ def archive(stop_at=None, max_pages=1000):
         time.sleep(0.5)
 
 
-def post(slug):
+def post(slug, pub=None):
     """One post with its full body_html."""
-    return _get(f"{PUB}/api/v1/posts/{urllib.parse.quote(slug)}")
+    return _get(f"{pub or PUB}/api/v1/posts/{urllib.parse.quote(slug)}")
 
 
-def feed():
+def feed(pub=None):
     """The public RSS feed: the 20 most recent posts with full text (no ids or sections)."""
     import email.utils
     import xml.etree.ElementTree as ET
-    req = urllib.request.Request(f"{PUB}/feed", headers={"User-Agent": UA})
+    req = urllib.request.Request(f"{pub or PUB}/feed", headers={"User-Agent": UA})
     root = ET.fromstring(urllib.request.urlopen(req, timeout=60).read())
     ns = {"content": "http://purl.org/rss/1.0/modules/content/"}
     out = []
