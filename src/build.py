@@ -304,7 +304,7 @@ window.addEventListener('DOMContentLoaded', () => {
     body = f"""<section class="hero">
 <h1>Every essay. Every series. One snowman.</h1>
 <p class="tally">{len(posts):,} essays in {len(by)} series · updated daily</p>
-<p>The complete writing of {AUTHOR} at CanadianSnowmanSays, since {first_year}: American political accountability, AI governance, geopolitics, history, satire and fiction, kept here independent of Substack.</p>
+<p>The complete writing of {AUTHOR} at CanadianSnowmanSays, since {first_year}: American political accountability, AI governance, geopolitics, history, satire and fiction.</p>
 <form class="homesearch" action="search/" method="get"><input type="search" name="q" placeholder="Search every essay…" aria-label="Search"><button>Search</button></form>
 </section>
 <h2 class="sect">Latest essays <a class="more" href="chronological/">Everything by date →</a></h2>
