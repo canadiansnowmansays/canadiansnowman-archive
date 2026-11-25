@@ -1,8 +1,8 @@
 name: Update and publish the archive
 
 on:
-  schedule:
-    - cron: "17 */6 * * *"   # every six hours
+  # Substack refuses requests from GitHub's servers, so new essays are fetched by a
+  # daily Claude scheduled task, which pushes them here; each push rebuilds the site.
   workflow_dispatch:          # "Run workflow" button on the Actions tab
   push:
     branches: [main]

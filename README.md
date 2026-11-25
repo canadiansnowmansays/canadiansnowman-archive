@@ -6,13 +6,12 @@ live at **https://canadiansnowmansays.github.io/canadiansnowman-archive/**.
 
 ## How it stays up to date
 
-Nothing needs doing by hand. Every six hours, GitHub runs
-`.github/workflows/publish.yml`, which:
-
-1. reads the public Substack archive and saves any new essays into `src/data/`
-   (once a week it also re-checks titles, subtitles and series);
-2. picks up any new series on Substack, with its description and thumbnail;
-3. rebuilds the whole site and its full-text search, and publishes it.
+Nothing needs doing by hand. Substack refuses requests from GitHub's servers, so a
+daily Claude scheduled task (early each morning, Toronto time) runs `src/update.py`,
+which reads the public Substack archive, saves any new essays into `src/data/` and
+picks up any new series with its description and thumbnail, then pushes to `main`.
+Every push runs `.github/workflows/publish.yml`, which rebuilds the whole site and
+its full-text search and publishes it.
 
 To force an update now: **Actions** tab → *Update and publish the archive* → **Run workflow**.
 
