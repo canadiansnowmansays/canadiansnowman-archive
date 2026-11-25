@@ -45,7 +45,7 @@ def thumb(src, w=480, h=300):
 
 def page(rel, title, body, desc="", extra_head="", active=""):
     """Wrap body in the site chrome. rel = path prefix back to site root."""
-    nav = [("", "Home"), ("sections/", "Series"), ("ledgers/", "Ledgers"), ("chronological/", "By date"), ("search/", "Search")]
+    nav = [("", "Home"), ("sections/", "Series"), ("ledgers/", "Ledgers"), ("chronological/", "By date"), ("search/", "Search"), ("about/", "About")]
     links = "".join(
         f'<a href="{rel}{h}"{" class=active" if active == lbl else ""}>{lbl}</a>' for h, lbl in nav
     )
@@ -266,6 +266,16 @@ document.querySelectorAll('.order button').forEach(b => b.addEventListener('clic
 <ul class="ledgers">{''.join(items)}</ul>"""
     write("ledgers/index.html", page("../", f"Ledgers · {SITE_NAME}", body, active="Ledgers"))
 
+    # ---------- about ----------
+    ap = os.path.join(HERE, "about.html")
+    if os.path.exists(ap):
+        body = f"""<article class="essay about">
+<header><h1>About</h1></header>
+<figure class="abouthero"><img src="../assets/about-stephen-and-dior.jpg" alt="Illustration of Stephen at his desk, red pen in hand, with his husky Dior at his feet"></figure>
+<div class="prose">{open(ap, encoding="utf-8").read()}</div>
+</article>"""
+        write("about/index.html", page("../", f"About · {SITE_NAME}", body, "About Stephen Gordon Lawton and this archive.", active="About"))
+
     # ---------- chronological ----------
     months = OrderedDict()
     for p in sorted(posts, key=lambda p: p["date"], reverse=True):
@@ -305,6 +315,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <h1>Every essay. Every series. One snowman.</h1>
 <p class="tally">{len(posts):,} essays in {len(by)} series · updated daily</p>
 <p>The complete writing of {AUTHOR} at CanadianSnowmanSays, since {first_year}: American political accountability, AI governance, geopolitics, history, satire and fiction.</p>
+<p class="aboutlink"><a href="about/">More about this archive →</a></p>
 <form class="homesearch" action="search/" method="get"><input type="search" name="q" placeholder="Search every essay…" aria-label="Search"><button>Search</button></form>
 </section>
 <h2 class="sect">Latest essays <a class="more" href="chronological/">Everything by date →</a></h2>

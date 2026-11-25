@@ -136,3 +136,11 @@ ul.ledgers .meta a, .ledgerlink a { color: var(--accent); }
 .ledgerstrip { display: flex; flex-wrap: wrap; gap: .6rem; }
 .ledgerstrip a { font: 600 .88rem var(--sans); text-decoration: none; padding: .5rem .9rem; border: 1px solid var(--rule); border-radius: 999px; background: #fff; }
 .ledgerstrip a:hover { border-color: var(--accent); color: var(--accent); }
+
+/* about */
+.abouthero { margin: 0 0 2rem; }
+.abouthero img { width: 100%; border-radius: 8px; display: block; }
+.prose .signoff { font-style: italic; margin-top: 2rem; }
+.hero .aboutlink { margin: -.6rem 0 1.2rem; font: 600 .9rem var(--sans); }
+.hero .aboutlink a { color: var(--accent); text-decoration: none; }
+@media (max-width: 700px) { .masthead nav { gap: .8rem; font-size: .85rem; flex-wrap: wrap; } }
