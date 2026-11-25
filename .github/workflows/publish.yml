@@ -2,7 +2,7 @@ name: Update and publish the archive
 
 on:
   # Substack refuses requests from GitHub's servers, so new essays are fetched by a
-  # daily Claude scheduled task, which pushes them here; each push rebuilds the site.
+  # daily Claude scheduled task (12:39 p.m. Toronto), which pushes them here; each push rebuilds the site.
   workflow_dispatch:          # "Run workflow" button on the Actions tab
   push:
     branches: [main]
