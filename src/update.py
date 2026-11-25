@@ -15,7 +15,7 @@ import urllib.request
 
 sys.path.insert(0, os.path.dirname(__file__))
 from clean import clean  # noqa: E402
-from substack import PUB, UA, archive, post  # noqa: E402
+from substack import PUB, UA, archive, feed, post  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
@@ -68,7 +68,7 @@ def to_post(api):
     if len(html_body) < 500:  # the archive list carries no full text; fetch the post itself
         html_body = post(api["slug"]).get("body_html") or ""
     body, cover, words = clean(html_body)
-    num = str(api["id"])
+    num = str(api.get("id") or api["slug"])  # feed posts carry no id: key them by slug
     with open(os.path.join(DATA, "posts", num + ".html"), "w", encoding="utf-8") as f:
         f.write(body)
     return {
@@ -87,30 +87,48 @@ def main(full=False):
     posts = json.load(open(PJ, encoding="utf-8"))
     known = {p["num"]: p for p in posts}
     added = 0
-    if full:
-        seen = set()
-        for api in archive():
-            num = str(api["id"])
-            seen.add(num)
-            if num not in known:
-                known[num] = to_post(api)
+    try:
+        if full:
+            seen = set()
+            for api in archive():
+                num = str(api["id"])
+                seen.add(num)
+                if api["slug"] in known:  # came in through the feed: re-key it by its Substack number
+                    old = known.pop(api["slug"])
+                    os.remove(os.path.join(DATA, "posts", api["slug"] + ".html"))
+                    known[num] = to_post(api)
+                    continue
+                if num not in known:
+                    known[num] = to_post(api)
+                    added += 1
+                    continue
+                p = known[num]
+                for k, v in (("title", api.get("title")), ("subtitle", api.get("subtitle")), ("section", api.get("section_name"))):
+                    v = (v or "").strip()
+                    if v != p.get(k, ""):
+                        p[k] = v
+            gone = set(known) - seen
+            if gone and len(gone) < 50:  # unpublished on Substack: keep the backup, but note it
+                print("no longer on Substack (kept in archive):", ", ".join(sorted(gone)))
+        else:
+            for api in archive(stop_at=set(known)):
+                known[str(api["id"])] = to_post(api)
                 added += 1
-                continue
-            p = known[num]
-            for k, v in (("title", api.get("title")), ("subtitle", api.get("subtitle")), ("section", api.get("section_name"))):
-                v = (v or "").strip()
-                if v != p.get(k, ""):
-                    p[k] = v
-        gone = set(known) - seen
-        if gone and len(gone) < 50:  # unpublished on Substack: keep the backup, but note it
-            print("no longer on Substack (kept in archive):", ", ".join(sorted(gone)))
-    else:
-        for api in archive(stop_at=set(known)):
-            known[str(api["id"])] = to_post(api)
-            added += 1
+    except Exception as e:
+        # Substack sometimes refuses its API to cloud servers; the public RSS feed still works
+        print(f"archive API unavailable ({e}); using the RSS feed instead")
+        slugs = {p["slug"] for p in known.values()}
+        for api in feed():
+            if api["slug"] not in slugs:
+                p = to_post(api)
+                known[p["num"]] = p
+                added += 1
     posts = sorted(known.values(), key=lambda p: p["date"])
     json.dump(posts, open(PJ, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
-    refresh_series(posts)
+    try:
+        refresh_series(posts)
+    except Exception as e:
+        print("series details not refreshed:", e)
     print(f"{added} new essay(s); archive now holds {len(posts)}")
 
 

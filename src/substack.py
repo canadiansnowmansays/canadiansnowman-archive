@@ -15,8 +15,8 @@ def _get(url, tries=5):
             with urllib.request.urlopen(req, timeout=60) as r:
                 return json.load(r)
         except Exception as e:  # rate limits and blips: back off and retry
-            if i == tries - 1:
-                raise
+            if i == tries - 1 or getattr(e, "code", None) in (401, 403, 404):
+                raise  # a refusal won't change on retry
             time.sleep(5 * (i + 1))
             print("retrying after", e)
 
@@ -42,3 +42,26 @@ def archive(stop_at=None, max_pages=1000):
 def post(slug):
     """One post with its full body_html."""
     return _get(f"{PUB}/api/v1/posts/{urllib.parse.quote(slug)}")
+
+
+def feed():
+    """The public RSS feed: the 20 most recent posts with full text (no ids or sections)."""
+    import email.utils
+    import xml.etree.ElementTree as ET
+    req = urllib.request.Request(f"{PUB}/feed", headers={"User-Agent": UA})
+    root = ET.fromstring(urllib.request.urlopen(req, timeout=60).read())
+    ns = {"content": "http://purl.org/rss/1.0/modules/content/"}
+    out = []
+    for it in root.iter("item"):
+        link = it.findtext("link") or ""
+        enc = it.find("enclosure")
+        when = email.utils.parsedate_to_datetime(it.findtext("pubDate"))
+        out.append({
+            "slug": link.rstrip("/").rsplit("/p/", 1)[-1],
+            "title": it.findtext("title") or "",
+            "subtitle": it.findtext("description") or "",
+            "post_date": when.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            "body_html": it.findtext("content:encoded", namespaces=ns) or "",
+            "cover_image": enc.get("url") if enc is not None else "",
+        })
+    return out

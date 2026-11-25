@@ -34,6 +34,7 @@ jobs:
         run: pip install beautifulsoup4
 
       - name: Fetch new essays from Substack
+        continue-on-error: true   # if Substack is unreachable, still publish what we have
         run: |
           # Once a week (Sunday's first run) re-check every essay's title and series
           if [ "$(date -u +%u)" = "7" ] && [ "$(date -u +%H)" -lt "06" ]; then
