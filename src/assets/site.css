@@ -122,3 +122,4 @@ ul.chrono .ser { font: .74rem var(--sans); color: var(--muted); margin-left: .4r
 .order { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; overflow: hidden; margin-bottom: .45rem; }
 .order button { font: 600 .78rem var(--sans); padding: .35rem .8rem; border: 0; background: #fff; color: var(--muted); cursor: pointer; }
 .order button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.hero .tally { font: 600 .85rem var(--sans); color: var(--accent); margin: -.2rem 0 .9rem; }

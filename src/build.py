@@ -269,7 +269,8 @@ window.addEventListener('DOMContentLoaded', () => {
     active_series = sorted(top, key=lambda n: max(p["date"] for p in by[n] + sum((by[c] for c in children.get(n, [])), [])), reverse=True)[:12]
     first_year = fmt_date(posts[0]["date"]).split(" ", 1)[1]
     body = f"""<section class="hero">
-<h1>{len(posts):,} essays. {len(by)} series. One snowman.</h1>
+<h1>Every essay. Every series. One snowman.</h1>
+<p class="tally">{len(posts):,} essays in {len(by)} series · updated daily</p>
 <p>The complete writing of {AUTHOR} at CanadianSnowmanSays, since {first_year}: American political accountability, AI governance, geopolitics, history, satire and fiction, kept here independent of Substack.</p>
 <form class="homesearch" action="search/" method="get"><input type="search" name="q" placeholder="Search every essay…" aria-label="Search"><button>Search</button></form>
 </section>
