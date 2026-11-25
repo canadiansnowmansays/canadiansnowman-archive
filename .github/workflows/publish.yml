@@ -1,0 +1,75 @@
+name: Update and publish the archive
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # every six hours
+  workflow_dispatch:          # "Run workflow" button on the Actions tab
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install
+        run: pip install beautifulsoup4
+
+      - name: Fetch new essays from Substack
+        run: |
+          # Once a week (Sunday's first run) re-check every essay's title and series
+          if [ "$(date -u +%u)" = "7" ] && [ "$(date -u +%H)" -lt "06" ]; then
+            python src/update.py --full
+          else
+            python src/update.py
+          fi
+
+      - name: Save new essays to the repository
+        run: |
+          git config user.name "archive-bot"
+          git config user.email "archive-bot@users.noreply.github.com"
+          git add src
+          if ! git diff --cached --quiet; then
+            git commit -m "Add new essays from Substack"
+            git push
+          fi
+
+      - name: Build site
+        run: python src/build.py _site
+
+      - name: Build search index
+        run: npx -y pagefind@1.6.0 --site _site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
